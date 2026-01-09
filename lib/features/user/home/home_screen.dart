@@ -3,7 +3,7 @@ import 'package:fixit/features/user/home/widgets/category_card.dart';
 import 'package:fixit/features/user/home/widgets/promo_banner.dart';
 import 'package:fixit/features/user/home/widgets/provider_card.dart';
 import 'package:fixit/features/user/home/widgets/section_header.dart';
-import 'package:fixit/features/user/services/providers_page.dart';
+import 'package:fixit/features/user/services/providers/providers_page.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {

@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.dark,
 
       // Follow system setting
-      themeMode: ThemeMode.system,
+      // themeMode: ThemeMode.system,
 
       // follow light
       // themeMode: ThemeMode.light,
@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
       // themeMode: ThemeMode.dark,
 
       // Use provider in production
-      // themeMode: themeProvider.themeMode,
+      themeMode: themeProvider.themeMode,
 
 
       // Platform-based routing

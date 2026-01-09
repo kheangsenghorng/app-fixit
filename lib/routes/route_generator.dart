@@ -1,10 +1,12 @@
 
-
 import 'package:fixit/features/auth/ui/login_sheet.dart';
 import 'package:fixit/features/auth/ui/sign_up_sheet.dart';
 import 'package:fixit/features/onboarding_screen/onboarding_screen.dart';
 import 'package:fixit/features/splash_screen/splash_screen_widget.dart';
 import 'package:fixit/features/user/main_screen.dart';
+import 'package:fixit/features/user/profile/appearance/appearance_screen.dart';
+import 'package:fixit/features/user/profile/edit/edit_profile_screen.dart';
+import 'package:fixit/features/user/profile/helpsupport/help_support_screen.dart';
 import 'package:fixit/features/user/search/search_result_screen.dart';
 import 'package:fixit/features/user/service_provider_detail/provider_detail_screen.dart';
 import 'package:fixit/features/user/review_summary/review_summary_screen.dart';
@@ -76,8 +78,33 @@ class RouteGenerator {
           settings: settings, // preserves arguments explicitly
           builder: (_) => const ReviewSummaryScreen(),
         );
+        case AppRoutes.myOrders:
+        return MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        );
+        case AppRoutes.orderDetail:
+        return MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        );
 
-      default:
+        case AppRoutes.profile:
+        return MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        );
+        case AppRoutes.editProfile:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const EditProfileScreen(),
+        );
+        case AppRoutes.appearance:
+        return MaterialPageRoute(
+          builder: (_) => const AppearanceScreen(),
+        );
+        case AppRoutes.helpSupport:
+        return MaterialPageRoute(
+          builder: (_) => const HelpSupportScreen(),
+        );
+       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(
             body: Center(child: Text('Route not found')),

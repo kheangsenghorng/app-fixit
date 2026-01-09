@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fixit/routes/app_routes.dart';
 
-import '../providers_page.dart';
+import '../providers/providers_page.dart';
 
 class ProviderGridCard extends StatelessWidget {
   final ProviderModel provider;

@@ -18,6 +18,15 @@ class AppRoutes {
 
   static const String reviewSummary = '/review-summary';
 
+  static const String myOrders = '/my-orders';
+  static const String orderDetail = '/order-detail';
 
+  static const String profile = '/profile';
+  static const String editProfile = '/edit-profile';
+
+  static const String appearance = '/appearance';
+
+  static const String helpSupport = '/help-support';
+  static const String aboutUs = '/about-us';
 
 }

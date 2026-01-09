@@ -1,4 +1,4 @@
-import 'package:fixit/features/user/services/providers_page.dart';
+import 'package:fixit/features/user/services/providers/providers_page.dart';
 import 'package:fixit/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:fixit/widgets/main_bottom_nav.dart';
@@ -110,7 +110,6 @@ class ServiceProvidersPage extends StatelessWidget {
         onTap: (index) {
           if (onNavTap != null) {
             onNavTap!(index);
-            Navigator.popUntil(context, (route) => route.isFirst);
           }
         },
       ),
