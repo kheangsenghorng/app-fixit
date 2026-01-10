@@ -1,8 +1,7 @@
-
-
-
-import 'package:fixit/features/auth/ui/sign_up_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:fixit/l10n/app_localizations.dart';
+import 'package:fixit/features/auth/ui/sign_up_sheet.dart';
+
 import '../widgets/auth_header.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/social_button.dart';
@@ -15,9 +14,9 @@ class LoginSheet extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDarkMode = theme.brightness == Brightness.dark;
+    final t = AppLocalizations.of(context);
 
     return Container(
-      // Ensure the sheet rounds at the top
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -25,16 +24,14 @@ class LoginSheet extends StatelessWidget {
       padding: EdgeInsets.only(
         left: 24,
         right: 24,
-        top: 12, // Small top padding for the handle
-        // This adds padding for the keyboard
+        top: 12,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: SingleChildScrollView(
         child: Column(
-          mainAxisSize: MainAxisSize.min, // Wrap content height
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- Bottom Sheet Drag Handle ---
             Center(
               child: Container(
                 width: 40,
@@ -45,14 +42,13 @@ class LoginSheet extends StatelessWidget {
                 ),
               ),
             ),
+
             const SizedBox(height: 20),
-
             const AuthHeader(),
-
             const SizedBox(height: 20),
 
             Text(
-              "Enter your email and password to login",
+              t.t('login_desc'),
               style: theme.textTheme.titleMedium?.copyWith(
                 color: colorScheme.onSurface,
                 height: 1.5,
@@ -61,13 +57,13 @@ class LoginSheet extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            const CustomTextField(
-              hint: "Enter your email",
+            CustomTextField(
+              hint: t.t('email_hint'),
               icon: Icons.email_outlined,
             ),
 
-            const CustomTextField(
-              hint: "Enter your password",
+            CustomTextField(
+              hint: t.t('password_hint'),
               icon: Icons.lock_outline,
               isPassword: true,
             ),
@@ -75,7 +71,7 @@ class LoginSheet extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: Text(
-                "Forgot Password?",
+                t.t('forgot_password'),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
@@ -89,7 +85,7 @@ class LoginSheet extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {},
                 child: Text(
-                  "Sign In",
+                  t.t('sign_in'),
                   style: TextStyle(
                     color: colorScheme.onPrimary,
                     fontWeight: FontWeight.bold,
@@ -103,26 +99,26 @@ class LoginSheet extends StatelessWidget {
             Center(
               child: GestureDetector(
                 onTap: () {
-                  Navigator.pop(context); // 1. Close the LoginSheet
-                  // 2. Open the SignUpSheet as a bottom sheet
+                  Navigator.pop(context);
                   showModalBottomSheet(
                     context: context,
-                    isScrollControlled: true, // Necessary for keyboard support
-                    backgroundColor: Colors.transparent, // Allows container decoration to show
-                    builder: (context) => const SignUpSheet(),
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => const SignUpSheet(),
                   );
                 },
                 child: RichText(
                   text: TextSpan(
                     children: [
                       TextSpan(
-                        text: "New to FixIt? ",
+                        text: '${t.t('new_to_fixit')} ',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          color:
+                          colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                       TextSpan(
-                        text: "Sign up now",
+                        text: t.t('sign_up_now'),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.bold,
@@ -138,7 +134,7 @@ class LoginSheet extends StatelessWidget {
 
             Center(
               child: Text(
-                "Or log in with",
+                t.t('or_login_with'),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
@@ -149,16 +145,16 @@ class LoginSheet extends StatelessWidget {
 
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: SocialButton(
-                    label: "Google",
+                    label: t.t('google'),
                     iconPath: "assets/images/google_logo.png",
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: SocialButton(
-                    label: "Apple",
+                    label: t.t('apple'),
                     iconPath: isDarkMode
                         ? "assets/images/apple.png"
                         : "assets/images/apple_logo.png",

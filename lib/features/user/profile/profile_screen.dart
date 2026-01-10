@@ -1,11 +1,12 @@
 import 'package:fixit/features/user/profile/widgets/logout_dialog.dart';
 import 'package:fixit/features/user/profile/widgets/profile_avatar.dart';
 import 'package:fixit/features/user/profile/widgets/profile_menu_tile.dart';
-
+import 'package:fixit/l10n/app_localizations.dart';
 import 'package:fixit/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/provider/language_provider.dart';
 import '../../../core/provider/theme_provider.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -14,17 +15,19 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final langProvider = Provider.of<LanguageProvider>(context);
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    // Determine the header text color based on background luminance
     bool isBackgroundLight = theme.colorScheme.surface.computeLuminance() > 0.5;
     Color headerTextColor = isBackgroundLight ? const Color(0xFF002B5B) : Colors.white;
 
+    // Helper to get translated theme mode name
     String getModeName(ThemeMode mode) {
       switch (mode) {
-        case ThemeMode.system: return "System Default";
-        case ThemeMode.light: return "Light Mode";
-        case ThemeMode.dark: return "Dark Mode";
+        case ThemeMode.system: return l10n.t('system_default');
+        case ThemeMode.light: return l10n.t('light_mode');
+        case ThemeMode.dark: return l10n.t('dark_mode');
       }
     }
 
@@ -38,11 +41,10 @@ class ProfileScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 30),
 
-              // 1. Header Widget
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'My Profile',
+                  l10n.t('my_profile'), // TRANSLATED
                   style: theme.textTheme.headlineMedium?.copyWith(
                     color: headerTextColor,
                     fontWeight: FontWeight.bold,
@@ -51,11 +53,9 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 30),
 
-              // 2. Profile Image Widget
               const ProfileAvatar(imageUrl: 'https://i.pravatar.cc/300'),
               const SizedBox(height: 15),
 
-              // 3. Name Label
               Text(
                 'Mahrama',
                 style: theme.textTheme.displayLarge?.copyWith(
@@ -65,63 +65,51 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 40),
 
-              // 4. Menu Items List
               ProfileMenuTile(
                 icon: Icons.person_outline,
                 iconColor: Colors.red.shade300,
-                title: 'Edit Profile',
-                onTap: () {
-                  Navigator.pushNamed(context, AppRoutes.editProfile);
-                },
-
+                title: l10n.t('edit_profile'), // TRANSLATED
+                onTap: () => Navigator.pushNamed(context, AppRoutes.editProfile),
               ),
+
               ProfileMenuTile(
                 icon: Icons.notifications_none,
                 iconColor: Colors.blue.shade300,
-                title: 'Notification',
+                title: l10n.t('notification'), // TRANSLATED
                 onTap: () {},
               ),
 
-              // --- THEME SWITCHER ADDED HERE ---
-              // const ThemeModeSwitcher(),
               ProfileMenuTile(
                 icon: Icons.palette_outlined,
-                iconColor: Colors.amber.shade400,
-                title: 'Appearance',
-                // Use your helper function to get the name
-                subtitle: getModeName(themeProvider.themeMode),
-                onTap: () {
-                  Navigator.pushNamed(context, AppRoutes.appearance);
-                },
+                iconColor: Colors.amber,
+                title: l10n.t('appearance'),
+                subtitle: getModeName(themeProvider.themeMode), // ADDED SUBTITLE
+                onTap: () => Navigator.pushNamed(context, AppRoutes.appearance),
               ),
 
-              // ProfileMenuTile(
-              //   icon: Icons.payment,
-              //   iconColor: Colors.amber.shade400,
-              //   title: 'Payment method',
-              //   onTap: () {},
-              // ),
+              ProfileMenuTile(
+                icon: Icons.language,
+                iconColor: Colors.blue,
+                title: l10n.t('language'),
+                subtitle: langProvider.currentLocale.languageCode == 'km' ? 'ភាសាខ្មែរ' : 'English',
+                onTap: () => _showLanguagePicker(context, langProvider),
+              ),
+
               ProfileMenuTile(
                 icon: Icons.headset_mic_outlined,
                 iconColor: Colors.blue.shade200,
-                title: 'Help & support',
-                onTap: () {
-                  Navigator.pushNamed(context, AppRoutes.helpSupport);
-                },
+                title: l10n.t('help_support'), // TRANSLATED
+                onTap: () => Navigator.pushNamed(context, AppRoutes.helpSupport),
               ),
+
               ProfileMenuTile(
-                icon: Icons.exit_to_app,
-                iconColor: theme.colorScheme.primary,
-                title: 'Logout',
-                titleColor: theme.colorScheme.primary,
+                icon: Icons.logout,
+                iconColor: Colors.red,
+                title: l10n.t('logout'),
                 showArrow: false,
-                onTap: () {
-
-                  showLogoutDialog(context);
-                },
+                onTap: () => showLogoutDialog(context),
               ),
 
-              const SizedBox(height: 20),
               const SizedBox(height: 40),
             ],
           ),
@@ -129,4 +117,49 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+
+  void _showLanguagePicker(BuildContext context, LanguageProvider provider) {
+    final l10n = AppLocalizations.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.t('select_language'),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              _languageOption(context, "English", "en", provider),
+              _languageOption(context, "ភាសាខ្មែរ", "km", provider),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _languageOption(BuildContext context, String name, String code, LanguageProvider provider) {
+    bool isSelected = provider.currentLocale.languageCode == code;
+    return ListTile(
+      title: Text(name, style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      trailing: isSelected ? const Icon(Icons.check_circle, color: Colors.blue) : null,
+      onTap: () {
+        provider.changeLanguage(code);
+        Navigator.pop(context);
+      },
+    );
+  }
+}
+void showLogoutDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (_) => const LogoutDialog(),
+  );
 }

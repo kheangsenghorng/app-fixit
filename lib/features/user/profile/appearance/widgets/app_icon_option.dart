@@ -1,14 +1,14 @@
 import 'package:fixit/features/user/profile/appearance/widgets/custom_radio_button.dar.dart';
 import 'package:flutter/material.dart';
 
-
 class AppIconOption extends StatelessWidget {
   final String title;
   final bool isSelected;
-  final VoidCallback onTap;
+  final Future<void> Function()? onTap; // ✅ CHANGE HERE
   final Color bgColor;
   final Color borderColor;
   final Color accentColor;
+  final IconData icon;
 
   const AppIconOption({
     super.key,
@@ -18,13 +18,17 @@ class AppIconOption extends StatelessWidget {
     required this.bgColor,
     required this.borderColor,
     required this.accentColor,
+    required this.icon,
   });
+
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Column(
         children: [
           Container(
@@ -33,10 +37,17 @@ class AppIconOption extends StatelessWidget {
             decoration: BoxDecoration(
               color: bgColor,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: borderColor, width: 2),
+              border: Border.all(
+                color: isSelected ? accentColor : borderColor,
+                width: 2,
+              ),
             ),
-            child: const Center(
-              child: Icon(Icons.token_outlined, color: Colors.grey, size: 28),
+            child: Center(
+              child: Icon(
+                icon,
+                size: 28,
+                color: isSelected ? accentColor : Colors.grey,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -48,7 +59,10 @@ class AppIconOption extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          CustomRadioButton(isSelected: isSelected, accentColor: accentColor),
+          CustomRadioButton(
+            isSelected: isSelected,
+            accentColor: accentColor,
+          ),
         ],
       ),
     );

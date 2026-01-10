@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
+
 class LogoutDialog extends StatelessWidget {
   const LogoutDialog({super.key});
 
@@ -7,7 +10,9 @@ class LogoutDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    const primaryBlue = Color(0xFF0056D2); // Your primary blue
+    const primaryBlue = Color(0xFF0056D2);
+
+    final t = AppLocalizations.of(context).t;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -15,50 +20,47 @@ class LogoutDialog extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
         child: Column(
-          mainAxisSize: MainAxisSize.min, // Wrap content height
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // 1. Illustration
-            // Replace with Image.asset('assets/logout_illu.png') when you have the file
-            Container(
+            // Illustration
+            Image.asset(
+              'assets/images/img.png',
               height: 120,
               width: 120,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/img.png'),
-                  fit: BoxFit.contain,
-                ),
-              ),
-
+              fit: BoxFit.contain,
             ),
+
             const SizedBox(height: 20),
 
-            // 2. Title
+            // Title
             Text(
-              'Logout',
+              t('logout_title'), // 🔥 localized
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : Colors.black87,
               ),
             ),
+
             const SizedBox(height: 10),
 
-            // 3. Subtitle
+            // Subtitle
             Text(
-              'Are you sure to logout?',
+              t('logout_confirm'), // 🔥 localized
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: Colors.grey,
               ),
             ),
+
             const SizedBox(height: 30),
 
-            // 4. Logout Button
+            // Logout Button
             SizedBox(
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
                 onPressed: () {
-                  // Add logout logic here
+                  // TODO: logout logic
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
@@ -68,9 +70,9 @@ class LogoutDialog extends StatelessWidget {
                   ),
                   elevation: 0,
                 ),
-                child: const Text(
-                  'Logout',
-                  style: TextStyle(
+                child: Text(
+                  t('logout'),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -78,17 +80,15 @@ class LogoutDialog extends StatelessWidget {
                 ),
               ),
             ),
+
             const SizedBox(height: 10),
 
-            // 5. Cancel Button
+            // Cancel Button
             TextButton(
               onPressed: () => Navigator.pop(context),
-              style: TextButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
+              child: Text(
+                t('cancel'),
+                style: const TextStyle(
                   color: primaryBlue,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -100,12 +100,4 @@ class LogoutDialog extends StatelessWidget {
       ),
     );
   }
-}
-
-// Helper function to call the dialog
-void showLogoutDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => const LogoutDialog(),
-  );
 }

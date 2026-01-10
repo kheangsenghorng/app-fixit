@@ -1,8 +1,8 @@
+import 'package:fixit/core/provider/app_icon_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fixit/core/provider/theme_provider.dart';
 
-// Import your new components (assuming they are in the same directory or widgets folder)
 import 'widgets/appearance_card.dart';
 import 'widgets/appearance_option.dart';
 import 'widgets/app_icon_option.dart';
@@ -16,6 +16,7 @@ class AppearanceScreen extends StatefulWidget {
 
 class _AppearanceScreenState extends State<AppearanceScreen> {
   String selectedIcon = "Modern";
+  bool _isChangingIcon = false;
 
   @override
   Widget build(BuildContext context) {
@@ -24,12 +25,16 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     final accentColor = theme.colorScheme.primary;
 
     return Scaffold(
-      backgroundColor:theme.colorScheme.surface,
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         backgroundColor: theme.colorScheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon:  Icon(Icons.arrow_back_ios_new, color: theme.colorScheme.primary, size: 20),
+          icon: Icon(
+            Icons.arrow_back_ios_new,
+            color: accentColor,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -82,28 +87,72 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   AppIconOption(
-                    title: "Classic",
-                    isSelected: selectedIcon == "Classic",
-                    accentColor: accentColor,
+                    title: 'Modern',
+                    icon: Icons.design_services,
+                    isSelected: selectedIcon == "Modern",
+                    onTap: _isChangingIcon
+                        ? null
+                        : () async {
+                      setState(() {
+                        _isChangingIcon = true;
+                        selectedIcon = "Modern";
+                      });
+
+                      await AppIconService.changeAppIcon("Modern");
+
+                      if (mounted) {
+                        setState(() => _isChangingIcon = false);
+                      }
+                    },
                     bgColor: Colors.white,
-                    borderColor: theme.colorScheme.primary,
-                    onTap: () => setState(() => selectedIcon = "Classic"),
-                  ),
-                  AppIconOption(
-                    title: "LifeStyle",
-                    isSelected: selectedIcon == "LifeStyle",
+                    borderColor: Colors.grey,
                     accentColor: accentColor,
+                  ),
+
+                  AppIconOption(
+                    title: "Classic",
+                    icon: Icons.build,
+                    isSelected: selectedIcon == "Classic",
+                    onTap: _isChangingIcon
+                        ? null
+                        : () async {
+                      setState(() {
+                        _isChangingIcon = true;
+                        selectedIcon = "Classic";
+                      });
+
+                      await AppIconService.changeAppIcon("Classic");
+
+                      if (mounted) {
+                        setState(() => _isChangingIcon = false);
+                      }
+                    },
                     bgColor: theme.colorScheme.secondary,
                     borderColor: theme.colorScheme.secondary,
-                    onTap: () => setState(() => selectedIcon = "LifeStyle"),
-                  ),
-                  AppIconOption(
-                    title: "Modern",
-                    isSelected: selectedIcon == "Modern",
                     accentColor: accentColor,
+                  ),
+
+                  AppIconOption(
+                    title: "Lifestyle",
+                    icon: Icons.favorite,
+                    isSelected: selectedIcon == "Lifestyle",
+                    onTap: _isChangingIcon
+                        ? null
+                        : () async {
+                      setState(() {
+                        _isChangingIcon = true;
+                        selectedIcon = "Lifestyle";
+                      });
+
+                      await AppIconService.changeAppIcon("Lifestyle");
+
+                      if (mounted) {
+                        setState(() => _isChangingIcon = false);
+                      }
+                    },
                     bgColor: const Color(0xFF121212),
                     borderColor: Colors.black,
-                    onTap: () => setState(() => selectedIcon = "Modern"),
+                    accentColor: accentColor,
                   ),
                 ],
               ),

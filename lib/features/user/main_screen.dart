@@ -1,4 +1,5 @@
 import 'package:fixit/features/auth/ui/login_sheet.dart';
+import 'package:fixit/features/user/city/city_screen.dart';
 import 'package:fixit/features/user/home/home_screen.dart';
 import 'package:fixit/features/user/orders/my_orders_screen.dart';
 import 'package:fixit/features/user/profile/profile_screen.dart';
@@ -76,7 +77,7 @@ class _MainScreenState extends State<MainScreen> {
       onSearchTap: _openSearch,
       onPopularServicesTap: _openPopularServices,
     ),
-    const Center(child: Text("City Screen")),
+    const CityScreen(),
     const MyOrdersScreen(),
     const ProfileScreen(),
   ];
