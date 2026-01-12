@@ -4,6 +4,7 @@ import 'package:fixit/features/auth/ui/sign_up_sheet.dart';
 import 'package:fixit/features/onboarding_screen/onboarding_screen.dart';
 import 'package:fixit/features/splash_screen/splash_screen_widget.dart';
 import 'package:fixit/features/user/main_screen.dart';
+import 'package:fixit/features/user/payment/payment_screen.dart';
 import 'package:fixit/features/user/profile/appearance/appearance_screen.dart';
 import 'package:fixit/features/user/profile/edit/edit_profile_screen.dart';
 import 'package:fixit/features/user/profile/helpsupport/help_support_screen.dart';
@@ -103,6 +104,10 @@ class RouteGenerator {
         case AppRoutes.helpSupport:
         return MaterialPageRoute(
           builder: (_) => const HelpSupportScreen(),
+        );
+        case AppRoutes.payment:
+        return MaterialPageRoute(
+          builder: (_) => const PaymentScreen(),
         );
        default:
         return MaterialPageRoute(

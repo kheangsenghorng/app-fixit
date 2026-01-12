@@ -1,3 +1,4 @@
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -98,7 +99,7 @@ class _CityScreenState extends State<CityScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text("Service Providers"),
-        backgroundColor: Colors.transparent,
+        backgroundColor: theme.colorScheme.surface,
         elevation: 0,
         actions: [
           IconButton(

@@ -18,7 +18,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  String? userId = "1"; // null = not logged in
+  String? userId  = "1"; // null = not logged in
 
   // 🔐 Login sheet
   void _showLoginSheet() {
@@ -76,7 +76,9 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(
       onSearchTap: _openSearch,
       onPopularServicesTap: _openPopularServices,
+      currentIndex: _selectedIndex,
     ),
+
     const CityScreen(),
     const MyOrdersScreen(),
     const ProfileScreen(),
@@ -85,6 +87,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       body: IndexedStack(
         index: _selectedIndex,
         children: _screens,

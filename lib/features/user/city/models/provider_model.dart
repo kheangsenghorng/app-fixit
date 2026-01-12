@@ -8,7 +8,7 @@ class ProviderModel {
   final Color bgColor;
   final String buttonText;
 
-  // ✅ GPS location
+  // 📍 GPS location
   final double latitude;
   final double longitude;
 

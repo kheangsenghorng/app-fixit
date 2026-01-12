@@ -33,86 +33,88 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 30),
-
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  l10n.t('my_profile'), // TRANSLATED
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: headerTextColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              const ProfileAvatar(imageUrl: 'https://i.pravatar.cc/300'),
-              const SizedBox(height: 15),
-
-              Text(
-                'Mahrama',
-                style: theme.textTheme.displayLarge?.copyWith(
-                  fontSize: 24,
-                  color: headerTextColor,
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              ProfileMenuTile(
-                icon: Icons.person_outline,
-                iconColor: Colors.red.shade300,
-                title: l10n.t('edit_profile'), // TRANSLATED
-                onTap: () => Navigator.pushNamed(context, AppRoutes.editProfile),
-              ),
-
-              ProfileMenuTile(
-                icon: Icons.notifications_none,
-                iconColor: Colors.blue.shade300,
-                title: l10n.t('notification'), // TRANSLATED
-                onTap: () {},
-              ),
-
-              ProfileMenuTile(
-                icon: Icons.palette_outlined,
-                iconColor: Colors.amber,
-                title: l10n.t('appearance'),
-                subtitle: getModeName(themeProvider.themeMode), // ADDED SUBTITLE
-                onTap: () => Navigator.pushNamed(context, AppRoutes.appearance),
-              ),
-
-              ProfileMenuTile(
-                icon: Icons.language,
-                iconColor: Colors.blue,
-                title: l10n.t('language'),
-                subtitle: langProvider.currentLocale.languageCode == 'km' ? 'ភាសាខ្មែរ' : 'English',
-                onTap: () => _showLanguagePicker(context, langProvider),
-              ),
-
-              ProfileMenuTile(
-                icon: Icons.headset_mic_outlined,
-                iconColor: Colors.blue.shade200,
-                title: l10n.t('help_support'), // TRANSLATED
-                onTap: () => Navigator.pushNamed(context, AppRoutes.helpSupport),
-              ),
-
-              ProfileMenuTile(
-                icon: Icons.logout,
-                iconColor: Colors.red,
-                title: l10n.t('logout'),
-                showArrow: false,
-                onTap: () => showLogoutDialog(context),
-              ),
-
-              const SizedBox(height: 40),
-            ],
+      // 1. ADD THE APPBAR HERE
+      appBar: AppBar(
+        backgroundColor: theme.colorScheme.surface,
+        elevation: 0,
+        centerTitle: false, // Matches your original left alignment
+        title: Text(
+          l10n.t('my_profile'),
+          style: theme.textTheme.headlineMedium?.copyWith(
+            color: headerTextColor,
+            fontWeight: FontWeight.bold,
           ),
+        ),
+        // Optional: Add a back button color if needed
+        iconTheme: IconThemeData(color: headerTextColor),
+      ),
+      body: SingleChildScrollView( // Removed SafeArea because AppBar handles top padding
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // 2. REMOVED the old Align/Text title from here
+            const SizedBox(height: 20),
+
+            const ProfileAvatar(imageUrl: 'https://i.pravatar.cc/300'),
+            const SizedBox(height: 15),
+
+            Text(
+              'Mahrama',
+              style: theme.textTheme.displayLarge?.copyWith(
+                fontSize: 24,
+                color: headerTextColor,
+              ),
+            ),
+            const SizedBox(height: 40),
+
+            ProfileMenuTile(
+              icon: Icons.person_outline,
+              iconColor: Colors.red.shade300,
+              title: l10n.t('edit_profile'),
+              onTap: () => Navigator.pushNamed(context, AppRoutes.editProfile),
+            ),
+
+            ProfileMenuTile(
+              icon: Icons.notifications_none,
+              iconColor: Colors.blue.shade300,
+              title: l10n.t('notification'),
+              onTap: () {},
+            ),
+
+            ProfileMenuTile(
+              icon: Icons.palette_outlined,
+              iconColor: Colors.amber,
+              title: l10n.t('appearance'),
+              subtitle: getModeName(themeProvider.themeMode),
+              onTap: () => Navigator.pushNamed(context, AppRoutes.appearance),
+            ),
+
+            ProfileMenuTile(
+              icon: Icons.language,
+              iconColor: Colors.blue,
+              title: l10n.t('language'),
+              subtitle: langProvider.currentLocale.languageCode == 'km' ? 'ភាសាខ្មែរ' : 'English',
+              onTap: () => _showLanguagePicker(context, langProvider),
+            ),
+
+            ProfileMenuTile(
+              icon: Icons.headset_mic_outlined,
+              iconColor: Colors.blue.shade200,
+              title: l10n.t('help_support'),
+              onTap: () => Navigator.pushNamed(context, AppRoutes.helpSupport),
+            ),
+
+            ProfileMenuTile(
+              icon: Icons.logout,
+              iconColor: Colors.red,
+              title: l10n.t('logout'),
+              showArrow: false,
+              onTap: () => showLogoutDialog(context),
+            ),
+
+            const SizedBox(height: 40),
+          ],
         ),
       ),
     );

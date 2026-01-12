@@ -17,8 +17,8 @@ final electricianData = [
     city: "Chicago",
     rating: 4.8,
     bgColor: Colors.orange,
-    latitude: 41.8781,
-    longitude: -87.6298,
+    latitude: 11.5664043,
+    longitude: 104.8804401,
   ),
 ];
 

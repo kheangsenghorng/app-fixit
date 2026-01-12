@@ -29,4 +29,8 @@ class AppRoutes {
   static const String helpSupport = '/help-support';
   static const String aboutUs = '/about-us';
 
+  static const String payment = '/payment';
+
+
+
 }

@@ -1,4 +1,3 @@
-import 'package:fixit/core/provider/app_icon_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fixit/core/provider/theme_provider.dart';
@@ -98,7 +97,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                         selectedIcon = "Modern";
                       });
 
-                      await AppIconService.changeAppIcon("Modern");
+                      // await AppIconService.changeAppIcon("Modern");
 
                       if (mounted) {
                         setState(() => _isChangingIcon = false);
@@ -121,7 +120,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                         selectedIcon = "Classic";
                       });
 
-                      await AppIconService.changeAppIcon("Classic");
+                      // await AppIconService.changeAppIcon("Classic");
 
                       if (mounted) {
                         setState(() => _isChangingIcon = false);
@@ -144,7 +143,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                         selectedIcon = "Lifestyle";
                       });
 
-                      await AppIconService.changeAppIcon("Lifestyle");
+                      // await AppIconService.changeAppIcon("Lifestyle");
 
                       if (mounted) {
                         setState(() => _isChangingIcon = false);

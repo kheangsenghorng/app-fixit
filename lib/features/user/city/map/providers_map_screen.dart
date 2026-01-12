@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../models/provider_model.dart';
@@ -68,6 +69,7 @@ class _ProvidersMapScreenState extends State<ProvidersMapScreen> {
         title: const Text("Providers Map"),
       ),
       body: GoogleMap(
+        mapType: MapType.hybrid,
         onMapCreated: (controller) {
           _mapController = controller;
         },
