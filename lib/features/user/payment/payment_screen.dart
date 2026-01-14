@@ -1,3 +1,4 @@
+import 'package:fixit/features/user/payment/widgets/show_payment_success_dialog.dart';
 import 'package:flutter/material.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -18,6 +19,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
     {"name": "PayPal", "icon": "assets/paypal.png"},
   ];
 
+  // --- DIALOG FUNCTION ---
+
   @override
   Widget build(BuildContext context) {
     const Color primaryBlue = Color(0xFF0056D2);
@@ -34,11 +37,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         ),
         title: const Text(
           "Payment",
-          style: TextStyle(
-            color: primaryBlue,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
+          style: TextStyle(color: primaryBlue, fontWeight: FontWeight.bold, fontSize: 20),
         ),
       ),
       body: Padding(
@@ -49,11 +48,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             const SizedBox(height: 10),
             const Text(
               "Select Payment method",
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.black54,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.black54, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 20),
 
@@ -66,50 +61,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   bool isSelected = selectedMethod == method['name'];
 
                   return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedMethod = method['name']!;
-                      });
-                    },
+                    onTap: () => setState(() => selectedMethod = method['name']!),
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
                       decoration: BoxDecoration(
                         color: isSelected ? lightBlueBackground : Colors.white,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: isSelected ? primaryBlue : Colors.grey.shade300,
-                          width: 1,
-                        ),
+                        border: Border.all(color: isSelected ? primaryBlue : Colors.grey.shade300, width: 1),
                       ),
                       child: Row(
                         children: [
-                          // Placeholder for icons - replace with Image.asset
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Icon(Icons.payment, size: 20, color: Colors.grey),
-                          ),
+                          _buildPaymentIcon(method['name']!), // Dynamic Icon helper
                           const SizedBox(width: 15),
                           Expanded(
                             child: Text(
                               method['name']!,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.grey.shade800,
-                              ),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.grey.shade800),
                             ),
                           ),
-                          Icon(
-                            Icons.check,
-                            color: isSelected ? primaryBlue : Colors.grey.shade200,
-                            size: 20,
-                          ),
+                          Icon(Icons.check, color: isSelected ? primaryBlue : Colors.grey.shade200, size: 20),
                         ],
                       ),
                     ),
@@ -117,56 +88,38 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 },
               ),
             ),
-
-            // Add New Card Button
-            OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 55),
-                side: const BorderSide(color: primaryBlue),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add, color: primaryBlue),
-                  SizedBox(width: 8),
-                  Text(
-                    "Add new card",
-                    style: TextStyle(
-                      color: primaryBlue,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: 20),
 
-            // Bottom Next Button
+            // Bottom Next Button -> TRIGGERS SUCCESS DIALOG
             SizedBox(
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () => showPaymentSuccessDialog(context), // Triggering the dialog here
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryBlue,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                child: const Text(
-                  "Next",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: const Text("Pay now", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 30),
           ],
         ),
+      ),
+    );
+  }
+
+  // Helper widget to handle icons
+  Widget _buildPaymentIcon(String name) {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(4)),
+      child: Icon(
+          name == "Bank account" ? Icons.account_balance : Icons.payment,
+          size: 20,
+          color: Colors.grey
       ),
     );
   }
