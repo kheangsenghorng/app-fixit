@@ -12,7 +12,6 @@ import 'l10n/app_localizations.dart';
 
 void main() {
   runApp(
-    // 2. Wrap with MultiProvider to support both Theme and Language
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
@@ -28,28 +27,27 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final langProvider = Provider.of<LanguageProvider>(context); // 3. Access LanguageProvider
+    final themeProvider = context.watch<ThemeProvider>();
+    final langProvider = context.watch<LanguageProvider>();
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'FixIt',
 
-      // 🌍 4. Bind locale to the provider instead of hardcoded 'km'
+      // 🌍 Localization
       locale: langProvider.currentLocale,
-
       supportedLocales: const [
         Locale('en'),
         Locale('km'),
       ],
-      localizationsDelegates: [
+      localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
 
-      // 🎨 Themes
+      // 🎨 Theme
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeProvider.themeMode,
