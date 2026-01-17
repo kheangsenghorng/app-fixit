@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 // Import your local widgets
 import 'home_category_list.dart';
 import 'home_promo_section.dart';
-import 'home_provider_list.dart';
 import 'home_provider_section.dart';
-import 'promo_banner.dart';
-import 'section_header.dart';
+
 
 class HomeBody extends StatelessWidget {
   final TextEditingController searchController;
@@ -61,7 +59,7 @@ class HomeBody extends StatelessWidget {
 
            // 4. Service Providers Section
             HomeProviderSection(
-              onSeeAllTap: () => print("Navigate to all providers"),
+              onSeeAllTap: () {},
             ),
           ],
         ),
