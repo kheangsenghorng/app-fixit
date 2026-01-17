@@ -1,9 +1,7 @@
 import 'package:fixit/features/auth/widgets/auth_header.dart';
 import 'package:fixit/features/auth/widgets/custom_text_field.dart';
+import 'package:fixit/features/auth/widgets/social_button.dart';
 import 'package:flutter/material.dart';
-
-import '../../Auth/widgets/social_button.dart';
-
 
 class SignUpSheet extends StatelessWidget {
   const SignUpSheet({super.key});
@@ -23,15 +21,13 @@ class SignUpSheet extends StatelessWidget {
         left: 24,
         right: 24,
         top: 12,
-        // Important: Moves the sheet up when the keyboard appears
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: SingleChildScrollView(
         child: Column(
-          mainAxisSize: MainAxisSize.min, // Wrap content height
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- Drag Handle ---
             Center(
               child: Container(
                 width: 40,
@@ -42,10 +38,9 @@ class SignUpSheet extends StatelessWidget {
                 ),
               ),
             ),
+
             const SizedBox(height: 20),
-
             const AuthHeader(),
-
             const SizedBox(height: 20),
 
             Text(
@@ -62,61 +57,18 @@ class SignUpSheet extends StatelessWidget {
               hint: "Full name",
               icon: Icons.person_outline,
             ),
-
             const CustomTextField(
               hint: "Enter your email",
               icon: Icons.email_outlined,
             ),
-
             const CustomTextField(
               hint: "Enter password",
               icon: Icons.lock_outline,
               isPassword: true,
             ),
 
-            const SizedBox(height: 8),
-
-            // TERMS & CONDITIONS
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: Checkbox(
-                    value: true,
-                    onChanged: (_) {},
-                    activeColor: colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: "I agree with FixIt's ",
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withValues(alpha: 0.6),
-                          ),
-                        ),
-                        TextSpan(
-                          text: "Terms & Conditions",
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
             const SizedBox(height: 24),
 
-            // SIGN UP BUTTON
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -146,10 +98,13 @@ class SignUpSheet extends StatelessWidget {
 
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: SocialButton(
                     label: "Google",
                     iconPath: "assets/images/google_logo.png",
+                    onTap: () {
+                      // TODO: Google sign-up
+                    },
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -159,6 +114,9 @@ class SignUpSheet extends StatelessWidget {
                     iconPath: isDarkMode
                         ? "assets/images/apple.png"
                         : "assets/images/apple_logo.png",
+                    onTap: () {
+                      // TODO: Apple sign-up
+                    },
                   ),
                 ),
               ],

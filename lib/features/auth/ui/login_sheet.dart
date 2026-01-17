@@ -149,6 +149,9 @@ class LoginSheet extends StatelessWidget {
                   child: SocialButton(
                     label: t.t('google'),
                     iconPath: "assets/images/google_logo.png",
+                    onTap: () {
+                      // TODO: Google sign-in logic
+                    },
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -158,10 +161,14 @@ class LoginSheet extends StatelessWidget {
                     iconPath: isDarkMode
                         ? "assets/images/apple.png"
                         : "assets/images/apple_logo.png",
+                    onTap: () {
+                      // TODO: Apple sign-in logic
+                    },
                   ),
                 ),
               ],
             ),
+
           ],
         ),
       ),
