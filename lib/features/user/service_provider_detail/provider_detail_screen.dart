@@ -15,78 +15,103 @@ class ProviderDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments;
-    final Map<String, dynamic> providerData =
-    (args is Map<String, dynamic>) ? args : {};
+    final Map<String, dynamic> providerData = (args is Map<String, dynamic>) ? args : {};
 
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     final String name = providerData['name'] ?? "Emily Jani";
     final String category = providerData['category'] ?? "Plumber";
-    final String imageUrl =
-        providerData['image'] ?? 'assets/images/providers/img.png';
+    final String imageUrl = providerData['image'] ?? 'assets/images/providers/img.png';
     final String rating = providerData['rating']?.toString() ?? "4.9";
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: colorScheme.surface,
       body: Stack(
         children: [
           CustomScrollView(
+            physics: const BouncingScrollPhysics(),
             slivers: [
               SliverAppBar(
                 pinned: true,
-                expandedHeight: 360,
-                backgroundColor: theme.colorScheme.surface,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-                  onPressed: () => Navigator.pop(context),
+                stretch: true,
+                expandedHeight: 380,
+                backgroundColor: colorScheme.surface,
+                elevation: 0,
+                // Soft gradient reveal when collapsed
+                surfaceTintColor: colorScheme.surface,
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white.withValues(alpha: 0.9),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new, size: 16, color: Colors.black),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
                 ),
                 actions: const [
-                  ProviderAppBarActions(),
+                  Padding(
+                    padding: EdgeInsets.only(right: 8),
+                    child: ProviderAppBarActions(), // Ensure these use the circular bg style
+                  ),
                 ],
+                // flexibleSpace: FlexibleSpaceBar(
+                //   stretchModes: const [StretchMode.zoomBackground],
+                //   background: ProviderHeader(imageUrl: imageUrl),
+                // ),
                 flexibleSpace: ProviderFlexibleSpace(
                   title: name,
+                  stretchModes: const [StretchMode.zoomBackground],
                   background: ProviderHeader(imageUrl: imageUrl),
                 ),
               ),
               SliverToBoxAdapter(
                 child: Container(
-                  padding: const EdgeInsets.fromLTRB(20, 30, 20, 120),
+                  // Use a negative margin to pull content over the rounded header
+                  margin: const EdgeInsets.only(top: 0),
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 140),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ProviderProfileInfo(
-                        name: name,
-                        category: category,
-                      ),
-                      const SizedBox(height: 25),
+                      ProviderProfileInfo(name: name, category: category),
+                      const SizedBox(height: 32),
+
                       ProviderStatsCard(rating: rating),
-                      const SizedBox(height: 30),
-                      Text("About $name",
-                          style: theme.textTheme.headlineMedium),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 32),
+
+                      _buildSectionTitle(theme, "About $name"),
+                      const SizedBox(height: 12),
                       Text(
-                        "Highly professional service provider dedicated to quality results.",
-                        style: theme.textTheme.bodyLarge,
+                        "Experienced $category with a focus on high-efficiency results. Known for prompt response times and meticulous attention to detail.",
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          height: 1.6,
+                        ),
                       ),
-                      const SizedBox(height: 30),
+
+                      const SizedBox(height: 32),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("Gallery",
-                              style: theme.textTheme.headlineMedium),
+                          _buildSectionTitle(theme, "Work Gallery"),
                           TextButton(
                             onPressed: () => showGallerySheet(context),
-                            child: const Text("View all"),
+                            child: Text("See All", style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 30),
-                      Text("Recent Reviews",
-                          style: theme.textTheme.headlineMedium),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 32),
+
+                      _buildSectionTitle(theme, "Recent Reviews"),
+                      const SizedBox(height: 16),
                       const ReviewItem(
                         user: "Josh Peter",
-                        comment: "Highly recommended!",
+                        comment: "Exceptional quality. Arrived exactly on time and fixed the leak in minutes. Highly recommended!",
                       ),
                     ],
                   ),
@@ -94,8 +119,25 @@ class ProviderDetailScreen extends StatelessWidget {
               ),
             ],
           ),
-          FloatingBookingButton(providerData: providerData),
+
+          // Floating Footer
+          Positioned(
+            bottom: 24, // Padding from bottom
+            left: 24,   // Padding from left
+            right: 24,  // Padding from right
+            child: FloatingBookingButton(providerData: providerData),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(ThemeData theme, String title) {
+    return Text(
+      title,
+      style: theme.textTheme.headlineSmall?.copyWith(
+        fontWeight: FontWeight.w900,
+        fontSize: 20,
       ),
     );
   }

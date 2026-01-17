@@ -5,21 +5,83 @@ import 'widgets/category_card.dart';
 import 'widgets/promo_banner.dart';
 import 'widgets/provider_card.dart';
 import 'widgets/section_header.dart';
- // NEW IMPORT
+// NEW IMPORT
 import '../services/providers/providers_page.dart';
 
-class HomeScreen extends StatelessWidget {
-  final VoidCallback onSearchTap;
+class HomeScreen extends StatefulWidget {
+
   final VoidCallback onPopularServicesTap;
   final int currentIndex;
 
+  final Function(int)? onNavTap;
+
   const HomeScreen({
     super.key,
-    required this.onSearchTap,
+
     required this.onPopularServicesTap,
     required this.currentIndex,
+    this.onNavTap,
   });
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+
+  final TextEditingController _searchController = TextEditingController();
+
+  final FocusNode _searchFocusNode = FocusNode();
+
+  bool _isSearching = false;
+
+
+  final List<Map<String, String>> _allRecentSearches = [
+    {'title': 'Plumber', 'results': '232 results'},
+    {'title': 'Cloth washer', 'results': '112 results'},
+    {'title': 'Electrical Repairs', 'results': '12 results'},
+    {'title': 'House Cleaning', 'results': '76 results'},
+  ];
+
+  List<Map<String, String>> _filteredResults = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredResults = _allRecentSearches; // Initial state
+    _searchController.addListener(_onSearchChanged);
+  }
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+
+
+  void _onSearchTap() {
+    setState(() {
+      _isSearching = true;
+    });
+  }
+
+  void _onClear() {
+    _searchController.clear();
+    setState(() {
+      _isSearching = false;
+      // Close keyboard
+      FocusScope.of(context).unfocus();
+    });
+  }
+  void _onSearchChanged() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredResults = _allRecentSearches
+          .where((item) => item['title']!.toLowerCase().contains(query))
+          .toList();
+    });
+  }
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -42,11 +104,21 @@ class HomeScreen extends StatelessWidget {
                     child: Column(
                       children: [
                         const SizedBox(height: 25),
-                        PromoBanner(onSearchTap: onSearchTap),
+                        PromoBanner(
+                          controller: _searchController,
+                          focusNode: _searchFocusNode,
+                          isSearching: _isSearching,
+                          onSearchTap: _onSearchTap,
+                          onClear: _onClear,
+                          filteredResults: _filteredResults,
+                          currentIndex: widget.currentIndex, // ✅ REQUIRED
+                          onNavTap: widget.onNavTap,           // ✅ OPTIONAL (but recommended)
+                        ),
+
                         const SizedBox(height: 40),
                         SectionHeader(
                           title: "Popular Services",
-                          onTap: onPopularServicesTap,
+                          onTap: widget.onPopularServicesTap,
                         ),
                       ],
                     ),
@@ -114,7 +186,7 @@ class HomeScreen extends StatelessWidget {
             MaterialPageRoute(
               builder: (_) => ProvidersPage(
                 serviceName: title,
-                currentIndex: currentIndex,
+                currentIndex: widget.currentIndex,
               ),
             ),
           );

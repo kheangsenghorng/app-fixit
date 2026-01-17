@@ -7,8 +7,6 @@ class ProviderModel {
   final double rating;
   final Color bgColor;
   final String buttonText;
-
-  // 📍 GPS location
   final double latitude;
   final double longitude;
 

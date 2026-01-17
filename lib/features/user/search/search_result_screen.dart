@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:fixit/widgets/main_bottom_nav.dart';
+import 'get_service_screen/get_service_screen.dart';
 import 'widgets/filter_sheet.dart';
 import 'widgets/provider_card.dart';
 
-class SearchResultScreen extends StatelessWidget {
-  final int currentIndex;
-  final Function(int)? onNavTap;
+class SearchResultScreen extends StatefulWidget {
+  final String? query;
 
   const SearchResultScreen({
     super.key,
-    this.currentIndex = 0,
-    this.onNavTap,
+    this.query,
   });
+
+  @override
+  State<SearchResultScreen> createState() => _SearchResultScreenState();
+}
+
+
+class _SearchResultScreenState extends State<SearchResultScreen> {
+  // Methods for state logic can go here (e.g. filtering logic)
 
   @override
   Widget build(BuildContext context) {
@@ -32,13 +38,13 @@ class SearchResultScreen extends StatelessWidget {
         title: Container(
           height: 45,
           decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
           ),
           child: TextField(
             style: TextStyle(color: colorScheme.onSurface),
             decoration: InputDecoration(
-              hintText: "Electrician",
+              hintText: widget.query ?? "Search",
               hintStyle: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
               prefixIcon: Icon(Icons.search, size: 20, color: colorScheme.onSurfaceVariant),
               suffixIcon: IconButton(
@@ -47,31 +53,35 @@ class SearchResultScreen extends StatelessWidget {
                 onPressed: () => _showFilterSheet(context),
               ),
               border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(vertical: 10),
             ),
           ),
         ),
       ),
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "35 results found",
+              "Results for \"${widget.query ?? ''}\"",
               style: textTheme.bodySmall?.copyWith(color: colorScheme.outline),
             ),
             const SizedBox(height: 15),
+
+            // 1. Featured Card
             _buildFeaturedServiceCard(context),
+
             const SizedBox(height: 25),
+
+            // 2. Section Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Electrician Providers",
-                  style: textTheme.headlineMedium,
+                  "${widget.query ?? 'Service'} Providers",
+                  style: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 TextButton(
                   onPressed: () {},
@@ -81,17 +91,20 @@ class SearchResultScreen extends StatelessWidget {
                 ),
               ],
             ),
+
             const SizedBox(height: 10),
+
+            // 3. Provider Grid
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                mainAxisExtent: 250,
+                mainAxisExtent: 240,
                 crossAxisSpacing: 15,
                 mainAxisSpacing: 15,
               ),
-              itemCount: 8,
+              itemCount: 6,
               itemBuilder: (context, index) {
                 return const ProviderCard(
                   name: "Jackson",
@@ -100,17 +113,12 @@ class SearchResultScreen extends StatelessWidget {
                 );
               },
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
-      bottomNavigationBar: MainBottomNav(
-        currentIndex: currentIndex,
-        onTap: (index) {
-          if (onNavTap != null) {
-            onNavTap!(index);
-          }
-        },
-      ),
+
+
     );
   }
 
@@ -126,8 +134,6 @@ class SearchResultScreen extends StatelessWidget {
   Widget _buildFeaturedServiceCard(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
-    // Constant for text/icons inside the blue card
     const onCardColor = Colors.white;
 
     return Container(
@@ -162,10 +168,10 @@ class SearchResultScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "Electrician service",
+                      "${widget.query ?? 'Service'} service",
                       style: theme.textTheme.headlineMedium?.copyWith(
-                          color: onCardColor,
-                          fontWeight: FontWeight.bold
+                        color: onCardColor,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
@@ -193,7 +199,6 @@ class SearchResultScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 15),
-          // --- UPDATED TIME ROW ---
           Row(
             children: [
               const Icon(Icons.alarm, color: onCardColor, size: 18),
@@ -211,16 +216,31 @@ class SearchResultScreen extends StatelessWidget {
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => GetServiceScreen(
+                      query: widget.query,
+
+                    ),
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: onCardColor,
                 foregroundColor: colorScheme.primary,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              child: const Text("Get This Service", style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text(
+                "Get This Service",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
-          )
+          ),
         ],
       ),
     );

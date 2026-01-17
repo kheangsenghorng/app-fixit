@@ -3,7 +3,6 @@ import 'package:fixit/features/user/city/city_screen.dart';
 import 'package:fixit/features/user/home/home_screen.dart';
 import 'package:fixit/features/user/orders/my_orders_screen.dart';
 import 'package:fixit/features/user/profile/profile_screen.dart';
-import 'package:fixit/features/user/search/search_result_screen.dart';
 import 'package:fixit/features/user/services/popular/popular_services_page.dart';
 import 'package:flutter/material.dart';
 
@@ -18,7 +17,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  String? userId  = "1"; // null = not logged in
+  String? userId = '1'; // null = not logged in
 
   // 🔐 Login sheet
   void _showLoginSheet() {
@@ -47,17 +46,17 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   // 🔍 Search screen
-  void _openSearch() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => SearchResultScreen(
-          currentIndex: _selectedIndex,
-          onNavTap: (index) => _handleNavTap(index, pop: true),
-        ),
-      ),
-    );
-  }
+  // void _openSearch() {
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (_) => SearchResultScreen(
+  //         currentIndex: _selectedIndex,
+  //         onNavTap: (index) => _handleNavTap(index, pop: true),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   // ⭐ Popular services
   void _openPopularServices() {
@@ -74,11 +73,10 @@ class _MainScreenState extends State<MainScreen> {
 
   late final List<Widget> _screens = [
     HomeScreen(
-      onSearchTap: _openSearch,
       onPopularServicesTap: _openPopularServices,
       currentIndex: _selectedIndex,
+      onNavTap: (index) => _handleNavTap(index),
     ),
-
     const CityScreen(),
     const MyOrdersScreen(),
     const ProfileScreen(),

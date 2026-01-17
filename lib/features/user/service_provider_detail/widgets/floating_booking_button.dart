@@ -13,27 +13,36 @@ class FloatingBookingButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Positioned(
-      bottom: 20,
-      left: 20,
-      right: 20,
-      child: GestureDetector(
-        onTap: () => scheduleBookingSheet(context, providerData),
-        child: Container(
-          height: 60,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
-              colors: [
-                theme.colorScheme.primary,
-                theme.colorScheme.primary.withBlue(255),
-              ],
-            ),
+    // 1. Remove the Positioned widget from here
+    return GestureDetector(
+      onTap: () => scheduleBookingSheet(context, providerData),
+      child: Container(
+        height: 62, // Slightly taller for a more premium feel
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20), // More rounded to match the "New Style"
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              theme.colorScheme.primary,
+              theme.colorScheme.primary.withAlpha(200), // Updated from .withBlue for better theme compatibility
+            ],
           ),
-          child: Center(
-            child: Text(
-              "Schedule Booking",
-              style: theme.textTheme.labelLarge?.copyWith(fontSize: 18),
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.primary.withAlpha(80),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            "Schedule Booking",
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white, // Ensure visibility on gradient
             ),
           ),
         ),

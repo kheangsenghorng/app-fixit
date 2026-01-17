@@ -4,11 +4,11 @@ import 'package:fixit/features/auth/ui/sign_up_sheet.dart';
 import 'package:fixit/features/onboarding_screen/onboarding_screen.dart';
 import 'package:fixit/features/splash_screen/splash_screen_widget.dart';
 import 'package:fixit/features/user/main_screen.dart';
+import 'package:fixit/features/user/orders/details/order_details_screen.dart';
 import 'package:fixit/features/user/payment/payment_screen.dart';
 import 'package:fixit/features/user/profile/appearance/appearance_screen.dart';
 import 'package:fixit/features/user/profile/edit/edit_profile_screen.dart';
 import 'package:fixit/features/user/profile/helpsupport/help_support_screen.dart';
-import 'package:fixit/features/user/search/search_result_screen.dart';
 import 'package:fixit/features/user/service_provider_detail/provider_detail_screen.dart';
 import 'package:fixit/features/user/review_summary/review_summary_screen.dart';
 
@@ -39,11 +39,11 @@ class RouteGenerator {
         return MaterialPageRoute(
           builder: (_) => const SignUpSheet(),
         );
-      // case AppRoutes.home:
-      //   return MaterialPageRoute(
-      //     builder: (_) => const HomeScreen(),
-      //   );
-        case AppRoutes.main:
+    // case AppRoutes.home:
+    //   return MaterialPageRoute(
+    //     builder: (_) => const HomeScreen(),
+    //   );
+      case AppRoutes.main:
         return MaterialPageRoute(
           builder: (_) => const MainScreen(),
         );
@@ -53,63 +53,67 @@ class RouteGenerator {
           builder: (_) => const UnsupportedScreen(),
         );
 
-      case AppRoutes.search:
-      return MaterialPageRoute(
-        builder: (_) => const SearchResultScreen(),
-      );
+    // case AppRoutes.search:
+    // return MaterialPageRoute(
+    //   builder: (_) => const SearchResultScreen(currentIndex: null,),
+    // );
 
       case AppRoutes.providerDetail:
-       return MaterialPageRoute(
-         settings: settings,
-        builder: (_) => const ProviderDetailScreen(),
-      );
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const ProviderDetailScreen(),
+        );
 
       case AppRoutes.popularServices:
-      return MaterialPageRoute(
-        builder: (_) => const MainScreen(),
-      );
+        return MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        );
 
       case AppRoutes.addService:
-      return MaterialPageRoute(
-        builder: (_) => const MainScreen(),
-      );
+        return MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        );
 
       case AppRoutes.reviewSummary:
         return MaterialPageRoute(
           settings: settings, // preserves arguments explicitly
           builder: (_) => const ReviewSummaryScreen(),
         );
-        case AppRoutes.myOrders:
+      case AppRoutes.myOrders:
         return MaterialPageRoute(
           builder: (_) => const MainScreen(),
         );
-        case AppRoutes.orderDetail:
+      case AppRoutes.orderDetail:
         return MaterialPageRoute(
           builder: (_) => const MainScreen(),
         );
 
-        case AppRoutes.profile:
+      case AppRoutes.profile:
         return MaterialPageRoute(
           builder: (_) => const MainScreen(),
         );
-        case AppRoutes.editProfile:
+      case AppRoutes.editProfile:
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => const EditProfileScreen(),
         );
-        case AppRoutes.appearance:
+      case AppRoutes.appearance:
         return MaterialPageRoute(
           builder: (_) => const AppearanceScreen(),
         );
-        case AppRoutes.helpSupport:
+      case AppRoutes.helpSupport:
         return MaterialPageRoute(
           builder: (_) => const HelpSupportScreen(),
         );
-        case AppRoutes.payment:
+      case AppRoutes.payment:
         return MaterialPageRoute(
           builder: (_) => const PaymentScreen(),
         );
-       default:
+      case AppRoutes.orderDetails:
+        return MaterialPageRoute(
+          builder: (_) => const OrderDetailsScreen(),
+        );
+      default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(
             body: Center(child: Text('Route not found')),

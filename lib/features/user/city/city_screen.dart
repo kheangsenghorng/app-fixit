@@ -1,16 +1,7 @@
-
-import 'dart:async';
+import 'package:fixit/features/user/city/widgets/provider_section.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-
-import '../../../core/provider/geocoding_service.dart';
-import '../../../core/provider/location_service.dart';
-import '../../../core/utils/distance_helper.dart';
-import 'data/providers_data.dart';
-import 'models/provider_model.dart';
-import 'widgets/category_filter.dart';
-import 'widgets/provider_section.dart';
-import 'map/providers_map_screen.dart';
+// Replace these with your actual model and widget imports
+// import '../widgets/provider_section.dart';
 
 class CityScreen extends StatefulWidget {
   const CityScreen({super.key});
@@ -20,135 +11,103 @@ class CityScreen extends StatefulWidget {
 }
 
 class _CityScreenState extends State<CityScreen> {
-  StreamSubscription<Position>? _positionStream;
-
-  String _selectedCategory = "All";
-  String _selectedCity = "All";
-
-  final bool _nearMeOnly = false;
-  double? _userLat;
-  double? _userLng;
-
-  bool _shouldShow(String category) =>
-      _selectedCategory == "All" || _selectedCategory == category;
-
-  List<ProviderModel> _filterByCity(List<ProviderModel> providers) {
-    if (_selectedCity == "All") return providers;
-    return providers.where((p) => p.city == _selectedCity).toList();
-  }
-
-  List<ProviderModel> _applyFilters(List<ProviderModel> providers) {
-    var list = _filterByCity(providers);
-
-    if (_nearMeOnly && _userLat != null && _userLng != null) {
-      list = sortByNearest(
-        providers: list,
-        userLat: _userLat!,
-        userLng: _userLng!,
-      );
-    }
-
-    return list;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _startLocationTracking();
-  }
-
-  Future<void> _startLocationTracking() async {
-    final allowed = await LocationService.ensurePermission();
-    if (!allowed) return;
-
-    _positionStream = LocationService.positionStream().listen(
-          (position) async {
-        setState(() {
-          _userLat = position.latitude;
-          _userLng = position.longitude;
-        });
-
-        final city = await GeocodingService.getCityFromCoordinates(
-          position.latitude,
-          position.longitude,
-        );
-
-        if (city != null && city != _selectedCity) {
-          setState(() => _selectedCity = city);
-        }
-      },
-      onError: (e) {
-        debugPrint("Location stream error: $e");
-      },
-    );
-  }
-
-
-  @override
-  void dispose() {
-    _positionStream?.cancel();
-    super.dispose();
-  }
+  String selectedCategory = "ALL";
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      extendBodyBehindAppBar: true,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text("Service Providers"),
-        backgroundColor: theme.colorScheme.surface,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.map),
-            onPressed: _userLat == null || _userLng == null
-                ? null
-                : () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ProvidersMapScreen(
-                    providers: _applyFilters(electricianData),
-                    userLat: _userLat!,
-                    userLng: _userLng!,
+        centerTitle: true,
+        title: Text(
+          "Service Providers",
+          style: theme.textTheme.headlineMedium?.copyWith(
+            color: colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+          ),
+
+        ),
+
+      ),
+      body: CustomScrollView(
+        slivers: [
+          // 1. Service Type Filter Section
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Service Type",
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
                   ),
-                ),
-              );
-            },
+                  const SizedBox(height: 12),
+                  _buildCategoryList(theme, colorScheme),
+                ],
+              ),
+            ),
+          ),
+
+          // 2. Dynamic Provider Sections
+          SliverPadding(
+            padding: const EdgeInsets.only(bottom: 20),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                if (selectedCategory == "ALL" || selectedCategory == "Electrician")
+                  const ProviderSection(title: "Electrician Providers", category: "Electrician"),
+                if (selectedCategory == "ALL" || selectedCategory == "Plumber")
+                  const ProviderSection(title: "Plumber Providers", category: "Plumber"),
+                if (selectedCategory == "ALL" || selectedCategory == "Carpenter")
+                  const ProviderSection(title: "Carpenter Providers", category: "Carpenter"),
+                if (selectedCategory == "ALL" || selectedCategory == "Painter")
+                  const ProviderSection(title: "Painter Providers", category: "Painter"),
+              ]),
+            ),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 100, 16, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CategoryFilter(
-              selectedCategory: _selectedCategory,
-              onChanged: (v) => setState(() => _selectedCategory = v),
-            ),
-            const SizedBox(height: 30),
+    );
+  }
 
-            if (_shouldShow("Electrician"))
-              ProviderSection(
-                title: "Electricians",
-                providers: _applyFilters(electricianData),
+  Widget _buildCategoryList(ThemeData theme, ColorScheme colorScheme) {
+    final categories = ["ALL", "Electrician", "Plumber", "Carpenter", "Painter"];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: categories.map((cat) {
+          bool isSelected = selectedCategory == cat;
+          return Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: ChoiceChip(
+              label: Text(cat),
+              selected: isSelected,
+              onSelected: (_) => setState(() => selectedCategory = cat),
+              selectedColor: colorScheme.primary,
+              // Handles text color switch between selected and unselected states
+              labelStyle: theme.textTheme.labelLarge?.copyWith(
+                color: isSelected ? Colors.white : colorScheme.primary,
+                fontWeight: FontWeight.bold,
               ),
-            if (_shouldShow("Plumber"))
-              ProviderSection(
-                title: "Plumbers",
-                providers: _applyFilters(plumberData),
+              backgroundColor: colorScheme.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: BorderSide(
+                  color: isSelected ? colorScheme.primary : Colors.grey.withValues(alpha: 0.3),
+                ),
               ),
-            if (_shouldShow("Painter"))
-              ProviderSection(
-                title: "Painters",
-                providers: _applyFilters(painterData),
-              ),
-          ],
-        ),
+              showCheckmark: false,
+            ),
+          );
+        }).toList(),
       ),
     );
   }

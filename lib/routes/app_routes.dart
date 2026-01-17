@@ -31,6 +31,10 @@ class AppRoutes {
 
   static const String payment = '/payment';
 
+  static const String feedback = '/feedback';
+
+  static const String orderDetails = '/order-Details';
+
 
 
 }

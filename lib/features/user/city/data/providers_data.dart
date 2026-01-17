@@ -17,8 +17,8 @@ final electricianData = [
     city: "Chicago",
     rating: 4.8,
     bgColor: Colors.orange,
-    latitude: 11.5664043,
-    longitude: 104.8804401,
+    latitude: 11.5664,
+    longitude: 104.8804,
   ),
 ];
 
@@ -31,15 +31,6 @@ final plumberData = [
     bgColor: Colors.green,
     latitude: 40.7130,
     longitude: -74.0055,
-  ),
-  ProviderModel(
-    name: "Isabella",
-    category: "Plumber",
-    city: "Los Angeles",
-    rating: 4.1,
-    bgColor: Colors.teal,
-    latitude: 34.0522,
-    longitude: -118.2437,
   ),
 ];
 

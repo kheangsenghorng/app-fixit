@@ -7,35 +7,46 @@ class PriceSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Price Summary", style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 15),
-        _priceRow(theme, "Service Fee", "\$$totalPrice/H"),
-        _priceRow(theme, "Traveling Fee", "Free", isFree: true),
-        const Divider(height: 30),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text("Total", style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-            Text("\$$totalPrice", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
-          ],
-        ),
-      ],
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        children: [
+          _priceRow(theme, "Service Fee", "\$$totalPrice/H", false),
+          const SizedBox(height: 12),
+          _priceRow(theme, "Traveling Fee", "Free", true),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Divider(thickness: 1, height: 1),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Subtotal", style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              Text("\$$totalPrice", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: colorScheme.primary)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _priceRow(ThemeData theme, String label, String price, {bool isFree = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: TextStyle(color: theme.colorScheme.outline)),
-          Text(price, style: TextStyle(fontWeight: FontWeight.bold, color: isFree ? Colors.green : null)),
-        ],
-      ),
+  Widget _priceRow(ThemeData theme, String label, String price, bool isFree) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(color: theme.colorScheme.outline, fontWeight: FontWeight.w500)),
+        Text(price, style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: isFree ? Colors.green : theme.colorScheme.onSurface
+        )),
+      ],
     );
   }
 }

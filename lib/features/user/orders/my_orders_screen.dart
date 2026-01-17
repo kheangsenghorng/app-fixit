@@ -24,7 +24,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       extendBodyBehindAppBar: true,
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-         title: const BlurredAppBar(title: "My Orders"),
+        title: const BlurredAppBar(title: "My Orders"),
         backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
       ),
@@ -119,7 +119,9 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             statusLabel: "Scheduled",
             statusColor: Colors.blue,
             actionButtonText: "Cancel Booking",
-            onActionPressed: () {},
+            onActionPressed: () {
+              Navigator.pushNamed(context, AppRoutes.orderDetails);
+            },
           ),
       ],
     );
