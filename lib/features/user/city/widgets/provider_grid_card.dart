@@ -17,7 +17,7 @@ class ProviderGridCarder extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -31,14 +31,19 @@ class ProviderGridCarder extends StatelessWidget {
             height: 150,
             margin: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              // Using themed highlight or fallbacks for variety
-              color: Colors.purple.withOpacity(0.2),
+              color: Colors.purple.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Center(
-              child: Icon(Icons.person, size: 70, color: Colors.white70),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.asset(
+                'assets/images/providers/img.png',
+                width: double.infinity,
+                height: double.infinity,
+              ),
             ),
           ),
+
 
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),

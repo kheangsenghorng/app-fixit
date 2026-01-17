@@ -1,6 +1,9 @@
 import 'package:fixit/features/user/search/search_result_screen.dart';
 import 'package:flutter/material.dart';
 
+import 'build_blue_card.dart';
+import 'build_search_bar.dart';
+
 class PromoBanner extends StatelessWidget {
   final VoidCallback onSearchTap;
   final TextEditingController controller;
@@ -27,6 +30,7 @@ class PromoBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Column(
       children: [
         Stack(
@@ -34,15 +38,22 @@ class PromoBanner extends StatelessWidget {
           alignment: Alignment.bottomCenter,
           children: [
             // 1. 🔵 BLUE PROMO CARD (Helper method below)
-            _buildBlueCard(),
+            // Helper: Builds the Blue Card with the woman popping out
+            buildBlueCard(),
 
             // 2. 🔍 FLOATING SEARCH BAR
             Positioned(
-              bottom: -28, // Hangs halfway off the bottom of the blue card
+              bottom: -28,
               left: 0,
               right: 0,
-              child: _buildSearchBar(context),
+              child: buildSearchBar(
+                controller: controller,
+                focusNode: focusNode,
+                isSearching: isSearching,
+                onSearchTap: onSearchTap,
+              ),
             ),
+
           ],
         ),
 
@@ -63,115 +74,6 @@ class PromoBanner extends StatelessWidget {
     );
   }
 
-  // Helper: Builds the Blue Card with the woman popping out
-  Widget _buildBlueCard() {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        // The Background Box
-        Container(
-          height: 160,
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: const Color(0xFF004AAD),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Get 30% off",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              SizedBox(height: 12),
-              Text(
-                "Just by Booking Home\nServices",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  height: 1.3,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // The Woman Image (Popping out of the top)
-        Positioned(
-          top: -35, // Moves head above the blue box
-          right: 0,
-          bottom: 0,
-          child: Image.asset(
-            'assets/images/providers/img_12.png',
-            fit: BoxFit.contain,
-            alignment: Alignment.bottomRight,
-            height: 200, // Slightly taller than the blue card
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Helper: Builds the Search Bar UI
-  Widget _buildSearchBar(BuildContext context) {
-    return Container(
-      height: 58,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        focusNode: focusNode,
-        onTap: onSearchTap,
-        readOnly: !isSearching,
-        style: const TextStyle(fontSize: 16, color: Colors.black87),
-        decoration: InputDecoration(
-          hintText: "Search here..",
-          hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 16),
-          border: InputBorder.none,
-          prefixIcon: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Icon(Icons.search_rounded, color: Colors.grey.shade700, size: 28),
-          ),
-          suffixIcon: isSearching
-              ? _buildClearButton()
-              : Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Icon(Icons.tune_rounded, color: Colors.grey.shade700),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildClearButton() {
-    return GestureDetector(
-      onTap: onClear,
-      child: Container(
-        margin: const EdgeInsets.all(12),
-        decoration: const BoxDecoration(
-          color: Color(0xFFE8F0FE),
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(Icons.close, size: 16, color: Color(0xFF004AAD)),
-      ),
-    );
-  }
 }
 
 class _SearchSuggestionsOverlay extends StatelessWidget {

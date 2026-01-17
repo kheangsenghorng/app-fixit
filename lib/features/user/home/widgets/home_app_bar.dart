@@ -1,6 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
+import 'app_bar_actions.dart';
+import 'app_logo.dart';
+
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const HomeAppBar({super.key});
 
@@ -22,42 +25,9 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Logo or Brand Section
-                Row(
-                  children: [
-                    Image.asset(
-                      'assets/logo/fixit_logo_small.png',
-                      width: 32,
-                      height: 32,
-                      color: theme.colorScheme.primary,
-                      errorBuilder: (context, error, stackTrace) =>
-                          Icon(Icons.build_circle, color: theme.colorScheme.primary),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      "FIXIT",
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
+                const AppLogo(),
                 // Action Buttons
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.notifications_none_rounded,
-                          color: theme.colorScheme.onSurface),
-                      onPressed: () {},
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.phone_outlined,
-                          color: theme.colorScheme.primary),
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
+                const AppBarActions(),
               ],
             ),
           ),

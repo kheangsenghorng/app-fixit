@@ -4,7 +4,17 @@ import 'package:flutter/material.dart';
 class ProviderCard extends StatelessWidget {
   final String name;
   final String job;
-  const ProviderCard({super.key, required this.name, required this.job});
+  final String imagePath;
+  final Color bgColor;
+
+
+  const ProviderCard({
+    super.key,
+    required this.name,
+    required this.job,
+    required this.imagePath,
+    required this.bgColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +29,20 @@ class ProviderCard extends StatelessWidget {
         children: [
           Container(
             height: 100,
-            decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(12)),
-            child: const Center(child: Icon(Icons.person, size: 40, color: Colors.blue)),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                imagePath,
+                width: double.infinity,
+                height: double.infinity,
+              ),
+            ),
           ),
+
           const SizedBox(height: 10),
           Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
           Text(job, style: const TextStyle(color: Colors.grey, fontSize: 12)),

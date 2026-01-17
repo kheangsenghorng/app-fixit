@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'onboarding_description.dart';
+import 'onboarding_image_box.dart';
+import 'onboarding_text_column.dart';
+
 
 class OnboardingContent extends StatelessWidget {
   final String image, title, description;
@@ -16,61 +20,19 @@ class OnboardingContent extends StatelessWidget {
     return Column(
       children: [
         const Spacer(flex: 2),
-
         // THE POPPING IMAGE BOX
-        Stack(
-          clipBehavior: Clip.none, // Allows the head to overflow
-          alignment: Alignment.bottomCenter,
-          children: [
-            // The Rounded Background Box
-            Container(
-              width: MediaQuery.of(context).size.width * 0.75,
-              height: MediaQuery.of(context).size.height * 0.35,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1), // Glassy lighter blue
-                borderRadius: BorderRadius.circular(24),
-              ),
-            ),
-            // The Image
-            Positioned(
-              top: -60, // Pushes the head out of the top
-              bottom: 0,
-              child: Image.asset(
-                image,
-                fit: BoxFit.contain,
-                // height: MediaQuery.of(context).size.height * 0.45,
-              ),
-            ),
-          ],
-        ),
+        OnboardingImageBox(image: image),
 
         const Spacer(flex: 2),
-
-        // TEXT CONTENT
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
+        // 2. Text Piece
+        OnboardingTextColumn(
+          title: title,
+          description: description,
         ),
 
         const SizedBox(height: 16),
 
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: Text(
-            description,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
-              fontSize: 16,
-              height: 1.5,
-            ),
-          ),
-        ),
+        OnboardingDescription(description: description),
 
         const Spacer(flex: 3),
       ],
