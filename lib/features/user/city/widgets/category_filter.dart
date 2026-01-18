@@ -1,33 +1,38 @@
 import 'package:flutter/material.dart';
 
-class CategoryFilter extends StatelessWidget {
-  final String selectedCategory;
-  final ValueChanged<String> onChanged;
+import 'category_filter_bar.dart';
+import 'city_section_title.dart';
 
-  const CategoryFilter({
+class CityCategoryFilter extends StatelessWidget {
+  final String selectedCategory;
+  final Function(String) onCategorySelected;
+
+  const CityCategoryFilter({
     super.key,
     required this.selectedCategory,
-    required this.onChanged,
+    required this.onCategorySelected,
   });
 
   @override
   Widget build(BuildContext context) {
-    final categories = ["All", "Electrician", "Plumber", "Painter"];
+    final categories = ["ALL", "Electrician", "Plumber", "Carpenter", "Painter"];
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: categories.map((cat) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: ChoiceChip(
-              label: Text(cat),
-              selected: selectedCategory == cat,
-              onSelected: (_) => onChanged(cat),
-              showCheckmark: false,
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const CitySectionTitle(title: "Service Type"),
+            const SizedBox(height: 12),
+            // ... inside CityCategoryFilter build method
+            CategoryFilterBar(
+              categories: categories, // Use the list defined above
+              selectedCategory: selectedCategory,
+              onCategorySelected: onCategorySelected, // Pass the callback directly
             ),
-          );
-        }).toList(),
+          ],
+        ),
       ),
     );
   }

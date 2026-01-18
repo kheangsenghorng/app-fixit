@@ -1,124 +1,68 @@
-
-import 'package:fixit/features/auth/ui/login_sheet.dart';
-import 'package:fixit/features/auth/ui/sign_up_sheet.dart';
-import 'package:fixit/features/onboarding_screen/onboarding_screen.dart';
-import 'package:fixit/features/splash_screen/splash_screen_widget.dart';
-import 'package:fixit/features/user/main_screen.dart';
-import 'package:fixit/features/user/orders/details/order_details_screen.dart';
-import 'package:fixit/features/user/payment/payment_screen.dart';
-import 'package:fixit/features/user/profile/appearance/appearance_screen.dart';
-import 'package:fixit/features/user/profile/edit/edit_profile_screen.dart';
-import 'package:fixit/features/user/profile/helpsupport/help_support_screen.dart';
-import 'package:fixit/features/user/service_provider_detail/provider_detail_screen.dart';
-import 'package:fixit/features/user/review_summary/review_summary_screen.dart';
-
-import 'package:fixit/unsupported_screen.dart';
 import 'package:flutter/material.dart';
+import '../features/auth/ui/login_sheet.dart';
+import '../features/auth/ui/sign_up_sheet.dart';
+import '../features/onboarding_screen/onboarding_screen.dart';
+import '../features/splash_screen/splash_screen_widget.dart';
+import '../features/user/main_screen.dart';
+import '../features/user/orders/details/order_details_screen.dart';
+import '../features/user/payment/payment_screen.dart';
+import '../features/user/profile/appearance/appearance_screen.dart';
+import '../features/user/profile/edit/edit_profile_screen.dart';
+
+import '../features/user/profile/help_support/help_support_screen.dart';
+import '../features/user/review_summary/review_summary_screen.dart';
+import '../features/user/service_provider_detail/provider_detail_screen.dart';
+import '../unsupported_screen.dart';
 import 'app_routes.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
-    switch (settings.name) {
-
-      case AppRoutes.splash:
-        return MaterialPageRoute(
-          builder: (_) => const SplashScreenWidget(),
-        );
-
-      case AppRoutes.onboarding:
-        return MaterialPageRoute(
-          builder: (_) => const OnboardingScreen(),
-        );
-
-      case AppRoutes.login:
-        return MaterialPageRoute(
-          builder: (_) => const LoginSheet(),
-        );
-
-      case AppRoutes.signup:
-        return MaterialPageRoute(
-          builder: (_) => const SignUpSheet(),
-        );
-    // case AppRoutes.home:
-    //   return MaterialPageRoute(
-    //     builder: (_) => const HomeScreen(),
-    //   );
-      case AppRoutes.main:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
-
-      case AppRoutes.unsupported:
-        return MaterialPageRoute(
-          builder: (_) => const UnsupportedScreen(),
-        );
-
-    // case AppRoutes.search:
-    // return MaterialPageRoute(
-    //   builder: (_) => const SearchResultScreen(currentIndex: null,),
-    // );
-
-      case AppRoutes.providerDetail:
-        return MaterialPageRoute(
-          settings: settings,
-          builder: (_) => const ProviderDetailScreen(),
-        );
-
-      case AppRoutes.popularServices:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
-
-      case AppRoutes.addService:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
-
-      case AppRoutes.reviewSummary:
-        return MaterialPageRoute(
-          settings: settings, // preserves arguments explicitly
-          builder: (_) => const ReviewSummaryScreen(),
-        );
-      case AppRoutes.myOrders:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
-      case AppRoutes.orderDetail:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
-
-      case AppRoutes.profile:
-        return MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        );
-      case AppRoutes.editProfile:
-        return MaterialPageRoute(
-          settings: settings,
-          builder: (_) => const EditProfileScreen(),
-        );
-      case AppRoutes.appearance:
-        return MaterialPageRoute(
-          builder: (_) => const AppearanceScreen(),
-        );
-      case AppRoutes.helpSupport:
-        return MaterialPageRoute(
-          builder: (_) => const HelpSupportScreen(),
-        );
-      case AppRoutes.payment:
-        return MaterialPageRoute(
-          builder: (_) => const PaymentScreen(),
-        );
-      case AppRoutes.orderDetails:
-        return MaterialPageRoute(
-          builder: (_) => const OrderDetailsScreen(),
-        );
-      default:
-        return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(child: Text('Route not found')),
-          ),
-        );
+    // Helper to keep code DRY (Don't Repeat Yourself)
+    MaterialPageRoute buildRoute(Widget child) {
+      return MaterialPageRoute(settings: settings, builder: (_) => child);
     }
+
+    switch (settings.name) {
+    // 🚀 Splash & Onboarding
+      case AppRoutes.splash: return buildRoute(const SplashScreenWidget());
+      case AppRoutes.onboarding: return buildRoute(const OnboardingScreen());
+
+    // 🔐 Auth Feature
+      case AppRoutes.login: return buildRoute(const LoginSheet());
+      case AppRoutes.signup: return buildRoute(const SignUpSheet());
+
+    // 🏠 Core App Structure
+      case AppRoutes.main:
+      case AppRoutes.popularServices:
+      case AppRoutes.addService:
+      case AppRoutes.myOrders:
+      case AppRoutes.profile:
+        return buildRoute(const MainScreen());
+
+    // 👤 Profile & Settings
+      case AppRoutes.editProfile: return buildRoute(const EditProfileScreen());
+      case AppRoutes.appearance: return buildRoute(const AppearanceScreen());
+      case AppRoutes.helpSupport: return buildRoute(const HelpSupportScreen());
+
+    // 🛠 Service & Bookings
+      case AppRoutes.providerDetail: return buildRoute(const ProviderDetailScreen());
+      case AppRoutes.reviewSummary: return buildRoute(const ReviewSummaryScreen());
+      case AppRoutes.orderDetails: return buildRoute(const OrderDetailsScreen());
+
+    // 💳 Payments
+      case AppRoutes.payment: return buildRoute(const PaymentScreen());
+
+    // ⚠️ Error Handling
+      case AppRoutes.unsupported: return buildRoute(const UnsupportedScreen());
+      default: return _errorRoute();
+    }
+  }
+
+  static Route<dynamic> _errorRoute() {
+    return MaterialPageRoute(
+      builder: (_) => const Scaffold(
+        body: Center(child: Text('Route not found')),
+      ),
+    );
   }
 }
