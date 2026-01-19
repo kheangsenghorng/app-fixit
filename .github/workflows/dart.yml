@@ -24,6 +24,9 @@ jobs:
           flutter --version
           dart --version
 
+      - name: flutter upgrade
+        run: flutter upgrade
+
       - name: Install dependencies
         run: flutter pub get
 
