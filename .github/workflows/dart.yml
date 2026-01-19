@@ -29,6 +29,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # ✅ INSTALL flutter_native_splash WITHOUT touching pubspec
+      - name: Install flutter_native_splash (CI only)
+        run: dart pub global activate flutter_native_splash
+
+      # ✅ GENERATE SPLASH
+      - name: Generate splash screen
+        run: dart pub global run flutter_native_splash:create
+
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
