@@ -14,11 +14,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 3.22.3
-          cache: true
+          flutter-version: '3.27.0' # Or 'stable' to always get the latest
 
       - name: Verify Flutter & Dart versions
         run: |
