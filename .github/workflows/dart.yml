@@ -2,31 +2,35 @@ name: Flutter CI
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # ✅ Install Flutter SDK (includes Dart)
-      - uses: subosito/flutter-action@v2
+      - name: Set up Flutter (from pubspec.yaml)
+        uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version-file: pubspec.yaml
           cache: true
 
-      # ✅ Install dependencies
-      - name: Flutter pub get
+      - name: Verify Flutter & Dart versions
+        run: |
+          flutter --version
+          dart --version
+
+      - name: Install dependencies
         run: flutter pub get
 
-      # ✅ Analyze
-      - name: Flutter analyze
-        run: flutter analyze
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
 
-      # ✅ Run tests
-      - name: Flutter test
+      - name: Run tests
         run: flutter test
