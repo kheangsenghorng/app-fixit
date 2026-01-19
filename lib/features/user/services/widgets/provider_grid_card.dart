@@ -155,7 +155,7 @@ class ProviderGridCard extends StatelessWidget {
       provider.imageUrl!,
       fit: BoxFit.contain,
       alignment: Alignment.bottomCenter,
-      errorBuilder: (_, _, _) => const Center(
+      errorBuilder: (context, error, stackTrace) => const Center(
         child: Icon(
           Icons.person,
           size: 60,

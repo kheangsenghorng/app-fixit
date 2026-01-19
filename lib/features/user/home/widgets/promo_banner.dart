@@ -139,7 +139,8 @@ class _SearchSuggestionsOverlay extends StatelessWidget {
               padding: EdgeInsets.zero,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: results.length,
-              separatorBuilder: (_, int _) => const Divider(height: 1, indent: 16, endIndent: 16),
+              separatorBuilder: (BuildContext context, int index) =>
+              const Divider(height: 1, indent: 16, endIndent: 16),
               itemBuilder: (context, index) {
                 final item = results[index];
                 return ListTile(

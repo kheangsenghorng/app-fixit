@@ -127,7 +127,7 @@ class _PopularServicesPageState extends State<PopularServicesPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             scrollDirection: Axis.horizontal,
             itemCount: items.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            separatorBuilder: (context, index) => const SizedBox(width: 12),
             itemBuilder: (context, index) =>
                 _buildServiceCard(context, items[index]),
           ),
@@ -178,7 +178,7 @@ class _PopularServicesPageState extends State<PopularServicesPage> {
               child: Image.asset(
                 item.imagePath,
                 fit: BoxFit.contain,
-                errorBuilder: (_, _, _) => Icon(
+                errorBuilder: (context, error, stackTrace) => Icon(
                   Icons.build_circle,
                   size: 40,
                   color: theme.dividerColor,
