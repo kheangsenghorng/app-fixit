@@ -1,56 +1,49 @@
-  name: fixit
-  description: "A new Flutter project."
-  publish_to: 'none'
+name: fixit
+description: "A new Flutter project."
+publish_to: 'none'
 
-  version: 1.0.0+1
+version: 1.0.0+1
 
-  environment:
-    sdk: '>=3.4.4 <4.0.0'
-    flutter: 3.27.0
+environment:
+  sdk: '>=3.4.4 <4.0.0'
+  flutter: 3.27.0
 
-
-  dependencies:
-    flutter:
-      sdk: flutter
-
-    flutter_localizations:
-      sdk: flutter
-
-    intl: ^0.20.2
-    cupertino_icons: ^1.0.8
-    provider: ^6.1.5+1
-    sheet: ^1.0.0
-    geolocator: ^14.0.2
-    geocoding: ^4.0.0
-    permission_handler: ^12.0.1
-
-    # 🔴 2.14.0 requires Dart 3.7 ❌
-    # ✅ latest compatible
-    google_maps_flutter: ^2.13.0
-
-    flutter_native_splash: ^2.4.6
-
-  dev_dependencies:
-    flutter_test:
-      sdk: flutter
-
-    # 🔴 6.0.0 requires Dart 3.8 ❌
-    # ✅ latest compatible
-    flutter_lints: ^5.0.0
-
-    flutter_launcher_icons: ^0.14.4
-
-  flutter_native_splash:
-    color: "#FFFFFF"
-    image: assets/logo/img.png
-    ios: true
-
+dependencies:
   flutter:
-    uses-material-design: true
+    sdk: flutter
 
-    assets:
-      - assets/fixit_logo.png
-      - assets/images/
-      - assets/images/providers/
-      - assets/images/services/
-      - assets/logo/
+  flutter_localizations:
+    sdk: flutter
+
+  intl: ^0.20.2
+  cupertino_icons: ^1.0.8
+  provider: ^6.1.5+1
+  sheet: ^1.0.0
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  permission_handler: ^12.0.1
+  google_maps_flutter: ^2.13.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
+
+  # ✅ CORRECT LOCATION
+  flutter_native_splash: ^2.4.7
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/logo/img.png
+  ios: true
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/fixit_logo.png
+    - assets/images/
+    - assets/images/providers/
+    - assets/images/services/
+    - assets/logo/
