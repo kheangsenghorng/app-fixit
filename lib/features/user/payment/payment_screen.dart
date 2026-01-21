@@ -24,8 +24,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.colorScheme.surface,
       appBar: const OrderAppBar(title: "Payment"),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),

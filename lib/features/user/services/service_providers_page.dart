@@ -334,7 +334,7 @@ class ProviderCard extends StatelessWidget {
       width: double.infinity,
       height: double.infinity,
 
-      errorBuilder: (_, __, ___) => _fallbackAvatar(),
+      errorBuilder: (_, _, _) => _fallbackAvatar(),
     );
   }
 

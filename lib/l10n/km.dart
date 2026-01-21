@@ -25,6 +25,8 @@ const Map<String, String> km = {
   'nav_order': 'ការកម្ម៉ង់',
   'nav_profile': 'គណនី',
   'logout_title': 'ចាកចេញ',
+  "already_have_account": "មានគណនីរួចហើយមែនទេ?",
+  "login_here": "ចូលប្រើនៅទីនេះ",
   'logout_confirm': 'តើអ្នកប្រាកដថាចង់ចាកចេញមែនទេ?',
   'logout': 'ចាកចេញ',
   'cancel': 'បោះបង់',

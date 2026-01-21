@@ -4,10 +4,13 @@ class OrderAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final VoidCallback? onBackPress;
 
+  final bool centerTitle;
+
   const OrderAppBar({
     super.key,
     required this.title,
     this.onBackPress,
+    this.centerTitle = false,
   });
 
   @override
@@ -19,6 +22,7 @@ class OrderAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: colorScheme.surface,
       elevation: 0,
       centerTitle: true,
+      automaticallyImplyLeading: false,
       leading: IconButton(
         icon: Icon(
             Icons.arrow_back_ios_new,

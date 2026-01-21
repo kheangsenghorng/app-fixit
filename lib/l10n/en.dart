@@ -25,6 +25,8 @@ const Map<String, String> en = {
   'nav_order': 'Order',
   'nav_profile': 'Profile',
   'logout_title': 'Logout',
+  "already_have_account": "Already have an account?",
+  "login_here": "Login here",
   'logout': 'Logout',
   'logout_confirm': 'Are you sure you want to logout?',
   'cancel': 'Cancel',

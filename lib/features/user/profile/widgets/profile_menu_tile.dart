@@ -1,3 +1,4 @@
+import 'package:fixit/features/user/profile/widgets/profile_menu_content.dart';
 import 'package:flutter/material.dart';
 
 class ProfileMenuTile extends StatelessWidget {
@@ -40,49 +41,16 @@ class ProfileMenuTile extends StatelessWidget {
           ),
         ],
       ),
-      child: ListTile(
+      child: InkWell(
         onTap: onTap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: iconColor, size: 26),
+        borderRadius: BorderRadius.circular(15),
+        child: ProfileMenuContent(
+          icon: icon,
+          iconColor: iconColor,
+          title: title,
+          subtitle: subtitle,
+          showArrow: showArrow,
         ),
-        title: Text(
-          title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: titleColor ?? theme.textTheme.titleMedium?.color,
-          ),
-        ),
-        // --- ADDED SUBTITLE LOGIC HERE ---
-        subtitle: subtitle != null
-            ? Text(
-          subtitle!,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: isDark ? Colors.white60 : Colors.black54,
-          ),
-        )
-            : null,
-        // ---------------------------------
-        trailing: showArrow
-            ? Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.arrow_forward_ios,
-            color: theme.colorScheme.primary,
-            size: 12,
-          ),
-        )
-            : null,
       ),
     );
   }

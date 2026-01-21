@@ -12,23 +12,26 @@ class PaymentReceiptDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
     const Color primaryBlue = Color(0xFF0056D2);
 
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 16,
-          color: Colors.black54,
+          color:textTheme.displayLarge?.color,
           height: 1.5,
         ),
         children: [
           const TextSpan(text: "Your payment for "),
           TextSpan(
             text: serviceName,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: textTheme.displaySmall?.color,
             ),
           ),
           const TextSpan(text: " of "),

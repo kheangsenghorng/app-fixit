@@ -1,6 +1,6 @@
-import 'package:fixit/features/user/profile/appearance/widgets/custom_radio_button.dar.dart';
+import 'package:fixit/features/user/profile/appearance/widgets/theme_mockup.dart';
 import 'package:flutter/material.dart';
-
+import 'custom_radio_button.dar.dart'; // Ensure this path is correct
 
 class AppearanceOption extends StatelessWidget {
   final String title;
@@ -9,6 +9,7 @@ class AppearanceOption extends StatelessWidget {
   final Color accentColor;
   final Brightness? brightness;
   final bool isSystem;
+  final int index; // For staggered delay
 
   const AppearanceOption({
     super.key,
@@ -18,60 +19,50 @@ class AppearanceOption extends StatelessWidget {
     required this.accentColor,
     this.brightness,
     this.isSystem = false,
+    this.index = 0,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        children: [
-          _PhoneMockup(brightness: brightness, accentColor: accentColor, isSystem: isSystem),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSurface,
-            ),
+
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 500 + (index * 100)),
+      tween: Tween(begin: 0.0, end: 1.0),
+      curve: Curves.easeOut,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 15 * (1 - value)),
+            child: child,
           ),
-          const SizedBox(height: 8),
-          CustomRadioButton(isSelected: isSelected, accentColor: accentColor),
-        ],
-      ),
-    );
-  }
-}
-
-class _PhoneMockup extends StatelessWidget {
-  final Brightness? brightness;
-  final Color accentColor;
-  final bool isSystem;
-
-  const _PhoneMockup({this.brightness, required this.accentColor, this.isSystem = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 90,
-      width: 50,
-      decoration: BoxDecoration(
-        color: isSystem ? Colors.grey[300] : (brightness == Brightness.dark ? Colors.black : Colors.white),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade400, width: 1.5),
-      ),
-      child: Stack(
-        children: [
-          if (isSystem)
-            Row(
-              children: [
-                Expanded(child: Container(color: Colors.white)),
-                Expanded(child: Container(color: Colors.black)),
-              ],
+        );
+      },
+      child: InkWell(
+        onTap: onTap,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: Column(
+          children: [
+            // This is the widget that was causing the error
+            ThemeMockup( // Using the new cut class
+              brightness: brightness,
+              accentColor: accentColor,
+              isSystem: isSystem,
             ),
-          Center(child: Icon(Icons.apps, size: 18, color: accentColor)),
-        ],
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            CustomRadioButton(isSelected: isSelected, accentColor: accentColor),
+          ],
+        ),
       ),
     );
   }

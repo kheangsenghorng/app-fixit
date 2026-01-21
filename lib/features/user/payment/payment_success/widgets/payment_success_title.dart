@@ -10,15 +10,18 @@ class PaymentSuccessTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
     return Text(
       title,
       textAlign: TextAlign.center,
-      style: const TextStyle(
+      style: TextStyle( // Removed 'const' here
         fontSize: 24,
         fontWeight: FontWeight.w900,
-        color: Color(0xFF1A1A1A),
-        letterSpacing: -0.5, // The "tightened" look for a modern feel
+        // Common choices:
+        color: textTheme.displayLarge?.color,
+        letterSpacing: -0.5,
       ),
     );
-  }
-}
+  }}
