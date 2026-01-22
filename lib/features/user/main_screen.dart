@@ -17,7 +17,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  String? userId; // null = not logged in
+  String? userId = '1'; // null = not logged in
 
   // 🔐 Login sheet
   void _showLoginSheet() {
