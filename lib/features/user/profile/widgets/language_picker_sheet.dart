@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fixit/l10n/app_localizations.dart';
 import 'package:fixit/core/provider/language_provider.dart';
 
-class LanguagePickerSheet extends StatelessWidget {
-  final LanguageProvider provider;
-
-  const LanguagePickerSheet({super.key, required this.provider});
+class LanguagePickerSheet extends ConsumerWidget {
+  const LanguagePickerSheet({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final currentLocale = ref.watch(languageNotifierProvider);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20),
@@ -24,12 +24,24 @@ class LanguagePickerSheet extends StatelessWidget {
           _LanguageOption(
             name: "English",
             code: "en",
-            provider: provider,
+            currentCode: currentLocale.languageCode,
+            onTap: () {
+              ref
+                  .read(languageNotifierProvider.notifier)
+                  .setLocale(const Locale('en'));
+              Navigator.pop(context);
+            },
           ),
           _LanguageOption(
             name: "ភាសាខ្មែរ",
             code: "km",
-            provider: provider,
+            currentCode: currentLocale.languageCode,
+            onTap: () {
+              ref
+                  .read(languageNotifierProvider.notifier)
+                  .setLocale(const Locale('km'));
+              Navigator.pop(context);
+            },
           ),
         ],
       ),
@@ -37,21 +49,23 @@ class LanguagePickerSheet extends StatelessWidget {
   }
 }
 
-// Private helper widget for the options
 class _LanguageOption extends StatelessWidget {
   final String name;
   final String code;
-  final LanguageProvider provider;
+  final String currentCode;
+  final VoidCallback onTap;
 
   const _LanguageOption({
     required this.name,
     required this.code,
-    required this.provider,
+    required this.currentCode,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    bool isSelected = provider.currentLocale.languageCode == code;
+    final isSelected = currentCode == code;
+
     return ListTile(
       title: Text(
         name,
@@ -59,11 +73,9 @@ class _LanguageOption extends StatelessWidget {
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
-      trailing: isSelected ? const Icon(Icons.check_circle, color: Colors.blue) : null,
-      onTap: () {
-        provider.changeLanguage(code);
-        Navigator.pop(context); // Close sheet
-      },
+      trailing:
+      isSelected ? const Icon(Icons.check_circle) : null,
+      onTap: onTap,
     );
   }
 }

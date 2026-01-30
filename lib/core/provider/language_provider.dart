@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-class LanguageProvider extends ChangeNotifier {
-  // Default to English or Khmer as you prefer
-  Locale _currentLocale = const Locale('en');
+part 'language_provider.g.dart';
 
-  Locale get currentLocale => _currentLocale;
+@riverpod
+class LanguageNotifier extends _$LanguageNotifier {
+  @override
+  Locale build() => const Locale('en');
 
-  void changeLanguage(String languageCode) {
-    _currentLocale = Locale(languageCode);
-    notifyListeners(); // This tells MaterialApp to rebuild
+  void setLocale(Locale locale) {
+    state = locale;
   }
 }

@@ -1,6 +1,7 @@
+import 'package:fixit/features/auth/presentation/ui/login_sheet.dart';
+import 'package:fixit/features/auth/presentation/ui/sign_up_sheet.dart';
 import 'package:flutter/material.dart';
-import '../features/auth/ui/login_sheet.dart';
-import '../features/auth/ui/sign_up_sheet.dart';
+
 import '../features/onboarding_screen/onboarding_screen.dart';
 import '../features/splash_screen/splash_screen_widget.dart';
 import '../features/user/main_screen.dart';

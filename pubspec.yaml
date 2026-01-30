@@ -5,7 +5,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.10.4 <4.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -16,12 +16,19 @@ dependencies:
 
   intl: ^0.20.2
   cupertino_icons: ^1.0.8
-  provider: ^6.1.5+1
+
+  # ✅ Riverpod (stable 2.x)
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
   sheet: ^1.0.0
   geolocator: ^14.0.2
   geocoding: ^4.0.0
   permission_handler: ^12.0.1
   google_maps_flutter: ^2.14.0
+  flutter_dotenv: ^6.0.0
+  dio: ^5.9.1
+  shared_preferences: ^2.5.4
 
 dev_dependencies:
   flutter_test:
@@ -29,6 +36,10 @@ dev_dependencies:
 
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+
+  # ✅ Code generation
+  build_runner: ^2.4.8
+  riverpod_generator: ^2.4.0
 
   # ✅ LAST COMPATIBLE VERSION
   flutter_native_splash: ^2.4.7
@@ -41,6 +52,8 @@ flutter_native_splash:
 flutter:
   uses-material-design: true
   assets:
+    - .env
+    - .env.test
     - assets/fixit_logo.png
     - assets/images/
     - assets/images/providers/
