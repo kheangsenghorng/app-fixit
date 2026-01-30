@@ -29,8 +29,8 @@ jobs:
       # 🔥 Create dummy env files for CI
       - name: Create env files
         run: |
-          touch .env
-          touch .env.test
+          echo "FLUTTER_PUBLIC_API_URL=${{ secrets.API_URL || 'https://example.com' }}" > .env
+          echo "FLUTTER_PUBLIC_API_URL=${{ secrets.API_URL || 'https://example.com' }}" > .env.test 
 
       - name: Install dependencies
         run: flutter pub get
