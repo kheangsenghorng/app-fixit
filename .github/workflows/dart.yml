@@ -26,6 +26,12 @@ jobs:
           flutter --version
           dart --version
 
+      # 🔥 Create dummy env files for CI
+      - name: Create env files
+        run: |
+          touch .env
+          touch .env.test
+
       - name: Install dependencies
         run: flutter pub get
 
