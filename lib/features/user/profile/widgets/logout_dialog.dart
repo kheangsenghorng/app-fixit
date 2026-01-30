@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-
 import '../../../../l10n/app_localizations.dart';
 
-
 class LogoutDialog extends StatelessWidget {
-  const LogoutDialog({super.key});
+  final VoidCallback onConfirm;
+
+  const LogoutDialog({
+    super.key,
+    required this.onConfirm,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +25,6 @@ class LogoutDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Illustration
             Image.asset(
               'assets/images/img.png',
               height: 120,
@@ -32,9 +34,8 @@ class LogoutDialog extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // Title
             Text(
-              t('logout_title'), // 🔥 localized
+              t('logout_title'),
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : Colors.black87,
@@ -43,9 +44,8 @@ class LogoutDialog extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            // Subtitle
             Text(
-              t('logout_confirm'), // 🔥 localized
+              t('logout_confirm'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: Colors.grey,
@@ -59,10 +59,7 @@ class LogoutDialog extends StatelessWidget {
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: () {
-                  // TODO: logout logic
-                  Navigator.pop(context);
-                },
+                onPressed: onConfirm, // 🔥 REAL LOGOUT
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryBlue,
                   shape: RoundedRectangleBorder(
@@ -83,7 +80,6 @@ class LogoutDialog extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            // Cancel Button
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(

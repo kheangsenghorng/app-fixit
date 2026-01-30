@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 class SignUpSubmitButton extends StatelessWidget {
   final VoidCallback? onPressed;
+  final bool loading;
 
   const SignUpSubmitButton({
     super.key,
     this.onPressed,
+    this.loading = false,
   });
 
   @override
@@ -15,15 +17,24 @@ class SignUpSubmitButton extends StatelessWidget {
 
     return SizedBox(
       width: double.infinity,
-      height: 54, // Set a standard height for consistency
+      height: 54,
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: loading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
         ),
-        child: Text(
+        child: loading
+            ? const SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Colors.white,
+          ),
+        )
+            : Text(
           "Sign Up",
           style: TextStyle(
             color: colorScheme.onPrimary,

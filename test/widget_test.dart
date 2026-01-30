@@ -1,27 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:fixit/main.dart';
-import 'package:fixit/core/provider/theme_provider.dart';
-import 'package:fixit/core/provider/language_provider.dart';
 
 void main() {
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    await dotenv.load(fileName: ".env.test");
+  });
+
   testWidgets('App launches successfully', (WidgetTester tester) async {
     await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => ThemeProvider()),
-          ChangeNotifierProvider(create: (_) => LanguageProvider()),
-        ],
-        child: const MyApp(),
+      const ProviderScope(
+        child: MyApp(),
       ),
     );
 
-    // 🚫 DO NOT use pumpAndSettle()
-    await tester.pump(); // just one frame
+    await tester.pump();
 
-    // App built successfully
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 }

@@ -25,6 +25,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       appBar: AppBar(
         title: const BlurredAppBar(title: "My Orders"),
         backgroundColor: theme.scaffoldBackgroundColor,
+        automaticallyImplyLeading: false,
         elevation: 0,
       ),
       body: Column(

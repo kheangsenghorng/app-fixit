@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-class ThemeProvider extends ChangeNotifier {
-  // 1. Change the variable to ThemeMode (instead of bool)
-  ThemeMode _themeMode = ThemeMode.system;
+// This file will be generated automatically
+part 'theme_provider.g.dart';
 
-  ThemeMode get themeMode => _themeMode;
-
-  // 2. Add this specific method that was missing
-  void setThemeMode(ThemeMode mode) {
-    _themeMode = mode;
-    notifyListeners(); // This triggers the UI to update
+@riverpod
+class ThemeNotifier extends _$ThemeNotifier {
+  @override
+  ThemeMode build() {
+    // This is the initial state
+    return ThemeMode.system;
   }
 
-  // Optional: Keep this if you still use a simple toggle elsewhere
+  // Equivalent to your setThemeMode method
+  void setThemeMode(ThemeMode mode) {
+    state = mode; // Simply updating 'state' notifies all listeners
+  }
+
+  // Equivalent to your toggleTheme method
   void toggleTheme(bool isDark) {
-    _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
-    notifyListeners();
+    state = isDark ? ThemeMode.dark : ThemeMode.light;
   }
 }

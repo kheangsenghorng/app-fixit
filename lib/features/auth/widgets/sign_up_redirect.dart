@@ -1,7 +1,8 @@
+import 'package:fixit/features/auth/presentation/ui/sign_up_sheet.dart';
 import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
-import '../ui/sign_up_sheet.dart';
+
 
 class SignUpRedirect extends StatelessWidget {
   const SignUpRedirect({super.key});

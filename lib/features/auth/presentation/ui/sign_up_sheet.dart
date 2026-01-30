@@ -1,6 +1,7 @@
+import 'package:fixit/features/auth/widgets/sign_up_sheet_body.dart';
 import 'package:flutter/material.dart';
 
-import '../widgets/sign_up_sheet_body.dart';
+
 
 class SignUpSheet extends StatelessWidget {
   const SignUpSheet({super.key});
