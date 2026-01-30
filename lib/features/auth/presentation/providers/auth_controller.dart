@@ -44,8 +44,6 @@ class AuthController extends _$AuthController {
       // 1. Perform Login
       final result = await repo.login(login, password);
 
-      print(result);
-
       // Save initial token
       await TokenStorage.save(result.token);
 
@@ -156,6 +154,9 @@ class AuthController extends _$AuthController {
     ref.invalidate(userProvider);
 
     // 🔥 Reset auth
+    state = const AsyncData(null);
+  }
+  void forceLogout() {
     state = const AsyncData(null);
   }
 

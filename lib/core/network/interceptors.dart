@@ -70,10 +70,12 @@ class AuthInterceptor extends Interceptor {
         // 🔥 FULL LOCAL LOGOUT
         await TokenStorage.clear();
         ref.invalidate(userProvider);
-        ref.read(authControllerProvider.notifier).state =
-        const AsyncData(null);
+        ref.read(authControllerProvider.notifier).forceLogout();
+
       }
+
     }
+
 
     return handler.next(err);
   }

@@ -42,11 +42,11 @@ class _CustomTextFieldState extends State<CustomTextField> {
         decoration: InputDecoration(
           hintText: widget.hint,
           hintStyle: TextStyle(
-            color: colorScheme.onSurface.withOpacity(0.6),
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
           ),
           prefixIcon: Icon(
             widget.icon,
-            color: colorScheme.onSurface.withOpacity(0.7),
+            color: colorScheme.onSurface.withValues(alpha: 0.7),
             size: 20,
           ),
           suffixIcon: widget.isPassword
@@ -55,7 +55,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
               _obscureText
                   ? Icons.visibility_off_outlined
                   : Icons.visibility_outlined,
-              color: colorScheme.onSurface.withOpacity(0.7),
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
             ),
             onPressed: () {
               setState(() => _obscureText = !_obscureText);

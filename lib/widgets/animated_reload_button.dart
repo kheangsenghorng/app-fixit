@@ -25,8 +25,12 @@ class AnimatedReloadButtonState extends State<AnimatedReloadButton> with TickerP
   @override
   void didUpdateWidget(AnimatedReloadButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isScrolling && !oldWidget.isScrolling) _bobController.repeat(reverse: true);
-    else if (!widget.isScrolling && oldWidget.isScrolling) _bobController.animateTo(0);
+
+    if (widget.isScrolling && !oldWidget.isScrolling) {
+      _bobController.repeat(reverse: true);
+    } else if (!widget.isScrolling && oldWidget.isScrolling) {
+      _bobController.animateTo(0);
+    }
   }
 
   @override
