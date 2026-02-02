@@ -51,10 +51,12 @@ class AuthRepository {
   }
 
   // ✅ ADD THIS
-  Future<String> refreshToken() async {
+  Future<AuthModel> refreshToken() async {
     final res = await dio.post('/refresh');
 
-    // Adjust key if backend uses different name
-    return res.data['token'];
+    print(res);
+    return AuthModel.fromJson(res.data);
   }
+
+
 }

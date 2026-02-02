@@ -22,11 +22,7 @@ class AuthController extends _$AuthController {
   Future<void> _autoLogin() async {
     try {
       final token = await TokenStorage.get();
-
       if (token == null) return;
-
-      // Set token first
-      state = AsyncData(AuthModel(message: '', token: token));
 
       await loadProfile();
     } catch (e) {
@@ -41,39 +37,32 @@ class AuthController extends _$AuthController {
     try {
       final repo = ref.read(authRepositoryProvider);
 
-      // 1. Perform Login
       final result = await repo.login(login, password);
 
-      // Save initial token
+      // Save token
       await TokenStorage.save(result.token);
 
-      // 2. Immediately refresh token (as per your logic)
-      final newToken = await repo.refreshToken();
+      // Set state directly
+      state = AsyncData(result);
 
-      // Save refreshed token
-      await TokenStorage.save(newToken);
-
-      // 3. Update state with refreshed token
-      state = AsyncData(result.copyWith(token: newToken));
-
-      // 4. Load user profile
+      // Load profile
       await loadProfile();
 
     } catch (e, st) {
-      String message = "Invalid credentials"; // Default
+      String message = "Invalid credentials";
+
       if (e is DioException) {
         if (e.response?.statusCode != 401 && e.response?.statusCode != 422) {
-          // If code is NOT 401/422, it's a System Error (API Not working)
           message = "API_DOWN: ${e.message}";
         } else {
-          // It is 401/422, extract short message from server
           message = e.response?.data['message'] ?? "Invalid credentials";
         }
       }
-      // Set the state with ONLY the short string
+
       state = AsyncError(message, st);
     }
   }
+
 
   Future<void> register({
     required String name,
@@ -93,10 +82,10 @@ class AuthController extends _$AuthController {
 
       await TokenStorage.save(result.token);
 
-      final newToken = await repo.refreshToken();
-      await TokenStorage.save(newToken);
 
-      state = AsyncData(result.copyWith(token: newToken));
+      await TokenStorage.save(result.token);
+
+      state = AsyncData(result);
 
       await loadProfile();
     } catch (e, st) {
@@ -121,13 +110,13 @@ class AuthController extends _$AuthController {
     final current = state.value;
 
     state = AsyncData(
-      AuthModel(
-        message: current?.message ?? '',
+      current!.copyWith(
         token: token,
-        user: user ?? current?.user,
+        user: user,
       ),
     );
   }
+
 
   Future<void> loadProfile() async {
     try {

@@ -50,11 +50,12 @@ class AuthInterceptor extends Interceptor {
         );
 
         final repo = AuthRepository(dio);
-        final newToken = await repo.refreshToken();
 
-        await TokenStorage.save(newToken);
+        final auth = await repo.refreshToken();
+        final newToken = auth.token;
 
         ref.read(authControllerProvider.notifier).updateAuth(newToken, null);
+
 
         final request = err.requestOptions;
         request.headers['Authorization'] = 'Bearer $newToken';
