@@ -1,8 +1,12 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 
+
+import '../data/auth_repository.dart';
 import '../presentation/providers/auth_controller.dart';
+import '../presentation/ui/otp/otp_screen.dart';
 import 'sign_up_form.dart';
 import 'sheet_drag_handle.dart';
 import 'auth_header.dart';
@@ -36,14 +40,32 @@ class SignUpSheetBody extends ConsumerWidget {
           SignUpSubmitButton(
             loading: auth.isLoading,
             onPressed: () async {
+              final phone = SignUpForm.phoneController.text;
+              final password = SignUpForm.passwordController.text;
+
+              // 1️⃣ Register (creates inactive user)
               await ref.read(authControllerProvider.notifier).register(
                 name: SignUpForm.nameController.text,
-                phone: SignUpForm.phoneController.text,
-                password: SignUpForm.passwordController.text,
+                phone: phone,
+                password: password,
               );
 
-              if (context.mounted && ref.read(authControllerProvider).value != null) {
-                Navigator.pop(context); // close sheet on success
+              final result = ref.read(authControllerProvider);
+
+              // 2️⃣ If register successful → send OTP + navigate
+              if (context.mounted && result.value == null && !result.hasError) {
+                // Send OTP
+                await ref.read(authRepositoryProvider).sendOtp(phone);
+                // Navigate to OTP screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => OtpScreen(
+                      phone: phone,
+                      password: password,
+                    ),
+                  ),
+                );
               }
             },
           ),
