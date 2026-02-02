@@ -35,5 +35,7 @@ class AppRoutes {
 
   static const String orderDetails = '/order-Details';
 
+  static const String otp ='/otp';
+
 
 }

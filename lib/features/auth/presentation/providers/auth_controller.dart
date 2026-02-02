@@ -14,10 +14,11 @@ part 'auth_controller.g.dart';
 class AuthController extends _$AuthController {
   @override
   AsyncValue<AuthModel?> build() {
-    // Start auto login but don't block build
     _autoLogin();
     return const AsyncData(null);
   }
+
+  // ---------------- AUTO LOGIN ----------------
 
   Future<void> _autoLogin() async {
     try {
@@ -31,6 +32,8 @@ class AuthController extends _$AuthController {
     }
   }
 
+  // ---------------- LOGIN ----------------
+
   Future<void> login(String login, String password) async {
     state = const AsyncLoading();
 
@@ -39,23 +42,23 @@ class AuthController extends _$AuthController {
 
       final result = await repo.login(login, password);
 
-      // Save token
       await TokenStorage.save(result.token);
 
-      // Set state directly
       state = AsyncData(result);
 
-      // Load profile
       await loadProfile();
-
     } catch (e, st) {
-      String message = "Invalid credentials";
+      String message = "Login failed";
 
       if (e is DioException) {
-        if (e.response?.statusCode != 401 && e.response?.statusCode != 422) {
-          message = "API_DOWN: ${e.message}";
+        final status = e.response?.statusCode;
+
+        if (status == 401) {
+          message = "Invalid credentials";
+        } else if (status == 403) {
+          message = "Account not verified. Please verify OTP.";
         } else {
-          message = e.response?.data['message'] ?? "Invalid credentials";
+          message = e.response?.data['message'] ?? e.message ?? message;
         }
       }
 
@@ -63,6 +66,8 @@ class AuthController extends _$AuthController {
     }
   }
 
+
+  // ---------------- REGISTER (NO AUTO LOGIN) ----------------
 
   Future<void> register({
     required String name,
@@ -74,49 +79,70 @@ class AuthController extends _$AuthController {
     try {
       final repo = ref.read(authRepositoryProvider);
 
-      final result = await repo.register(
+      // Only create user (inactive) — OTP comes next
+      await repo.register(
         name: name,
         phone: phone,
         password: password,
       );
 
-      await TokenStorage.save(result.token);
-
-
-      await TokenStorage.save(result.token);
-
-      state = AsyncData(result);
-
-      await loadProfile();
+      state = const AsyncData(null);
     } catch (e, st) {
       String message = "Registration failed";
 
       if (e is DioException) {
-        if (e.response?.statusCode != 401 && e.response?.statusCode != 422) {
-          message = "API_DOWN: ${e.message}";
-        } else {
-          message = e.response?.data['message'] ?? "Registration failed";
-        }
+        message = e.response?.data['message'] ?? message;
       }
 
       state = AsyncError(message, st);
     }
   }
 
+  // ---------------- VERIFY OTP + AUTO LOGIN ----------------
 
+  Future<void> verifyOtp({
+    required String phone,
+    required String code,
+    required String password,
+  }) async {
+    state = const AsyncLoading();
 
-  /// Used by interceptor after refresh
+    try {
+      // 1️⃣ Verify OTP (backend activates user)
+      await ref.read(authRepositoryProvider).verifyOtp(
+        phone: phone,
+        code: code,
+      );
+
+      // 2️⃣ Login after OTP success
+      await login(phone, password);
+    } catch (e, st) {
+      String message = "OTP verification failed";
+
+      if (e is DioException) {
+        message = e.response?.data['message'] ?? message;
+      }
+
+      state = AsyncError(message, st);
+    }
+  }
+
+  // ---------------- UPDATE AUTH (INTERCEPTOR) ----------------
+
   void updateAuth(String token, UserModel? user) {
     final current = state.value;
 
+    if (current == null) return;
+
     state = AsyncData(
-      current!.copyWith(
+      current.copyWith(
         token: token,
         user: user,
       ),
     );
   }
 
+  // ---------------- LOAD PROFILE ----------------
 
   Future<void> loadProfile() async {
     try {
@@ -132,6 +158,8 @@ class AuthController extends _$AuthController {
     }
   }
 
+  // ---------------- LOGOUT ----------------
+
   Future<void> logout() async {
     try {
       await ref.read(authRepositoryProvider).logout();
@@ -139,15 +167,12 @@ class AuthController extends _$AuthController {
 
     await TokenStorage.clear();
 
-    // 🔥 Reset user provider
     ref.invalidate(userProvider);
 
-    // 🔥 Reset auth
     state = const AsyncData(null);
   }
+
   void forceLogout() {
     state = const AsyncData(null);
   }
-
-
 }
