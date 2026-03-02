@@ -232,7 +232,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                   await ref.read(authRepositoryProvider).sendOtp(widget.phone);
 
                   // 2. CHECK MOUNTED before using context (fixes the warning)
-                  if (!mounted) return;
+                  if (!context.mounted) return;
 
                   _startTimer(300);
                   ScaffoldMessenger.of(context).showSnackBar(

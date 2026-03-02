@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 
+import '../../../../core/models/user_model.dart';
 import '../../../../core/provider/language_provider.dart';
 import '../../../../core/provider/theme_provider.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -12,10 +13,12 @@ import 'language_picker_sheet.dart';
 import 'logout_dialog.dart';
 
 class ProfileMenuSection extends ConsumerWidget {
-  const ProfileMenuSection({super.key});
+  final UserModel user;
+  const ProfileMenuSection({super.key, required this.user,});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+
     final themeMode = ref.watch(themeNotifierProvider);
     final currentLocale = ref.watch(languageNotifierProvider);
     final l10n = AppLocalizations.of(context);
@@ -39,7 +42,12 @@ class ProfileMenuSection extends ConsumerWidget {
           icon: Icons.person_outline,
           iconColor: Colors.redAccent,
           title: l10n.t('edit_profile'),
-          onTap: () => Navigator.pushNamed(context, AppRoutes.editProfile),
+          subtitle: user.name,
+          onTap: () => Navigator.pushNamed(
+            context,
+            AppRoutes.editProfile,
+            arguments: user,
+          ),
         ),
 
         ProfileMenuTile(

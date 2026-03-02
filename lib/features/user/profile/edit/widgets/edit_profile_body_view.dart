@@ -1,79 +1,145 @@
-import 'package:fixit/features/user/profile/edit/widgets/phone_input_field.dart';
 import 'package:flutter/material.dart';
-// Standardize your imports based on your file structure
-import 'package:fixit/features/user/profile/edit/widgets/profile_image_picker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
-import 'custom_text_field.dart' show CustomTextField;
+import '../../../../../widgets/apple_ui_kit.dart';
+import '../providers/edit_profile_provider.dart';
 
 
-class EditProfileBodyView extends StatelessWidget {
-  const EditProfileBodyView({super.key});
+
+import 'edit_profile_form.dart.dart';
+import 'edit_profile_header.dart';
+
+class EditProfileBodyView extends ConsumerStatefulWidget {
+  final int userId;
+  const EditProfileBodyView({super.key, required this.userId});
+
+  @override
+  ConsumerState<EditProfileBodyView> createState() => _EditProfileBodyViewState();
+}
+
+class _EditProfileBodyViewState extends ConsumerState<EditProfileBodyView> {
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  bool _initialized = false;
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  void _loadProfile() {
+    Future.microtask(() =>
+        ref.read(editProfileProvider.notifier).loadProfile(widget.userId)
+    );
+  }
+
+  void _initializeControllers(dynamic user) {
+    if (!_initialized) {
+      nameController.text = user.name ?? '';
+      emailController.text = user.email ?? '';
+      phoneController.text = user.phone ?? '';
+      _initialized = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // It's often cleaner to define colors as constants or pull from Theme
-    const Color primaryBlue = Color(0xFF0056D2);
+    final profileState = ref.watch(editProfileProvider);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    // Logic to determine what overlays to show
+    final bool isActionLoading = profileState.isLoading && profileState.hasValue;
+
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FB),
+      body: Stack(
         children: [
-          const SizedBox(height: 20),
-          // 1. Profile Image Widget
-          const Center(
-            child: ProfileImagePicker(
-              imageUrl: 'https://i.pravatar.cc/300',
+
+          // 2. MAIN CONTENT
+          profileState.when(
+            loading: () => const AppleSkeletonLoader(),
+            error: (e, _) => AppleErrorView(
+              message: e.toString(),
+              onRetry: _loadProfile,
             ),
-          ),
-          const SizedBox(height: 40),
+            data: (user) {
+              if (user == null) return const SizedBox.shrink();
+              _initializeControllers(user);
 
-          // 2. Standard Form Fields
-          const CustomTextField(label: "Name", hint: "Mahrama"),
-          const CustomTextField(label: "Email", hint: "Mahrama@gmail.com"),
-          const CustomTextField(
-            label: "Date of Birth",
-            hint: "28/11/2005",
-            suffixIcon: Icons.calendar_today_outlined,
-          ),
-          const CustomTextField(
-            label: "Country",
-            hint: "Mexico",
-            suffixIcon: Icons.arrow_drop_down,
-          ),
-
-          // 3. Phone Number Widget
-          const PhoneInputField(label: "Phone number", hint: "+92 3459864343"),
-
-          const SizedBox(height: 40),
-
-          // 4. Save Button
-          SizedBox(
-            width: double.infinity,
-            height: 55,
-            child: ElevatedButton(
-              onPressed: () {
-                // TODO: Implement update logic
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryBlue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+              return Center(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40),
+                  child: Column(
+                    children: [
+                      EditProfileHeader(
+                        imageUrl: user.avatar,
+                        onImageTap: _pickAndUploadImage,
+                      ),
+                      const SizedBox(height: 40),
+                      EditProfileForm(
+                        nameController: nameController,
+                        emailController: emailController,
+                        phoneController: phoneController,
+                      ),
+                      const SizedBox(height: 40),
+                      _buildSaveButton(isActionLoading),
+                    ],
+                  ),
                 ),
-              ),
-              child: const Text(
-                "Save",
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold
-                ),
-              ),
-            ),
+              );
+            },
           ),
-          const SizedBox(height: 30),
+
+          // 3. ACTION LOADING OVERLAY (HUD)
+          if (isActionLoading) const AppleLoadingHUD(message: "Updating..."),
         ],
       ),
+    );
+  }
+
+  // --- HELPER WIDGETS ---
+
+  Widget _buildSaveButton(bool isLoading) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 500),
+      child: AppleButton(
+        label: "Save Changes",
+        isLoading: isLoading,
+        onPressed: _onSavePressed,
+      ),
+    );
+  }
+
+  // --- LOGIC METHODS ---
+
+  Future<void> _pickAndUploadImage() async {
+    final file = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (file != null) {
+      ref.read(editProfileProvider.notifier).updateAvatar(
+        userId: widget.userId,
+        filePath: file.path,
+      );
+    }
+  }
+
+  void _onSavePressed() {
+    ref.read(editProfileProvider.notifier).updateProfile(
+      userId: widget.userId,
+      name: nameController.text,
+      email: emailController.text,
+      phone: phoneController.text,
     );
   }
 }

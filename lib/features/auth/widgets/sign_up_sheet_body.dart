@@ -56,6 +56,8 @@ class SignUpSheetBody extends ConsumerWidget {
               if (context.mounted && result.value == null && !result.hasError) {
                 // Send OTP
                 await ref.read(authRepositoryProvider).sendOtp(phone);
+
+                if (!context.mounted) return;
                 // Navigate to OTP screen
                 Navigator.push(
                   context,
