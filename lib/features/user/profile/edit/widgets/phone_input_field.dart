@@ -3,16 +3,26 @@ import 'package:flutter/material.dart';
 class PhoneInputField extends StatelessWidget {
   final String label;
   final String hint;
+  final TextEditingController? controller;
 
-  const PhoneInputField({super.key, required this.label, required this.hint});
+  const PhoneInputField({
+    super.key,
+    required this.label,
+    required this.hint,
+    this.controller,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.grey)),
+        Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.grey),
+        ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
@@ -22,15 +32,15 @@ class PhoneInputField extends StatelessWidget {
           child: Row(
             children: [
               const SizedBox(width: 12),
-              const Text("🇵🇰", style: TextStyle(fontSize: 20)),
+              const Text("🇰🇭", style: TextStyle(fontSize: 20)),
               const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
               Container(
-                  height: 24, width: 1,
-                  color: Colors.grey.shade300,
-                  margin: const EdgeInsets.symmetric(horizontal: 10)
+                height: 24, width: 1, color: Colors.grey.shade300,
+                margin: const EdgeInsets.symmetric(horizontal: 10),
               ),
               Expanded(
                 child: TextField(
+                  controller: controller,
                   decoration: InputDecoration(hintText: hint, border: InputBorder.none),
                 ),
               ),

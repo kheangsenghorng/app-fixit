@@ -12,4 +12,9 @@ class UserRepository {
     final response = await dio.get('/me');
     return ProfileResponseModel.fromJson(response.data);
   }
+
+  Future<ProfileResponseModel> updateProfile(Map<String, dynamic> data) async {
+    final response = await dio.put('/me', data: data);
+    return ProfileResponseModel.fromJson(response.data);
+  }
 }

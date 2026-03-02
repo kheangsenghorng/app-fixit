@@ -1,10 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/user_model.dart';
 import '../providers/user_repository_provider.dart';
+import '../../../auth/presentation/providers/auth_controller.dart';
 
-class UserNotifier extends AsyncNotifier<UserModel> {
+class UserNotifier extends AsyncNotifier<UserModel?> {
   @override
-  Future<UserModel> build() async {
+  Future<UserModel?> build() async {
+    final auth = ref.watch(authControllerProvider);
+
+    if (auth.value == null) return null;
+
     final profile = await ref.read(userRepositoryProvider).getProfile();
     return profile.user;
   }
@@ -17,7 +22,18 @@ class UserNotifier extends AsyncNotifier<UserModel> {
       return profile.user;
     });
   }
+
+
+  Future<void> updateUser(Map<String, dynamic> data) async {
+    state = const AsyncLoading();
+
+    state = await AsyncValue.guard(() async {
+      final profile =
+      await ref.read(userRepositoryProvider).updateProfile(data);
+      return profile.user;
+    });
+  }
 }
 
 final userProvider =
-AsyncNotifierProvider<UserNotifier, UserModel>(UserNotifier.new);
+AsyncNotifierProvider<UserNotifier, UserModel?>(UserNotifier.new);

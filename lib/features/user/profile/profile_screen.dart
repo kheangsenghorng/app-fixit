@@ -9,7 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../widgets/custom_header_bar.dart';
 import '../../../widgets/general/general_loading_view.dart';
 
-
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
@@ -18,12 +17,8 @@ class ProfileScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    // 1. Watch auth state
     final auth = ref.watch(authControllerProvider);
-
-// 2. Only watch user when logged in
-    final userAsync = auth.value == null ? null : ref.watch(userProvider);
-
+    final userAsync = ref.watch(userProvider);
 
     final isLight = theme.colorScheme.surface.computeLuminance() > 0.5;
     final headerTextColor = isLight ? const Color(0xFF002B5B) : Colors.white;
@@ -33,48 +28,59 @@ class ProfileScreen extends ConsumerWidget {
         title: l10n.t('my_profile'),
         showBackButton: false,
       ),
-      body: _buildBody(auth, userAsync, l10n, headerTextColor, context),
+      body: RefreshIndicator.adaptive( // Adaptive makes it look like iOS
+        onRefresh: () async {
+          await ref.read(userProvider.notifier).refresh();
+        },
+        child: _buildBody(auth, userAsync, l10n, headerTextColor, context),
+      ),
     );
   }
 
   Widget _buildBody(
       AsyncValue auth,
-      AsyncValue? userAsync,
+      AsyncValue userAsync,
       AppLocalizations l10n,
       Color headerTextColor,
-      BuildContext context
+      BuildContext context,
       ) {
-    // 🔥 Case A: Auth itself is loading (App is checking if user is logged in)
+    // 1. Check Auth Loading
     if (auth.isLoading && auth.value == null) {
       return const GeneralLoadingView();
     }
 
-    // 🔥 Case B: Logged out
-    if (auth.value == null) {
-      return const SizedBox();
+    if (auth.value == null) return const SizedBox();
+
+    // 2. Optimized Data Loading Logic
+    // We use .value to keep existing data on screen while refreshing/updating
+    final user = userAsync.value;
+
+    // Determine if we show the blur overlay (refreshing OR loading while data exists)
+    final bool isProcessing = userAsync.isRefreshing || (userAsync.isLoading && user != null);
+
+    // If we have no user data and we are loading, show full screen spinner
+    if (user == null && userAsync.isLoading) {
+      return GeneralLoadingView(message: l10n.t('loading_profile'));
     }
 
-    // 🔥 Case C: Logged in, handling User Profile data
-    return userAsync!.when(
-      // Use the new GeneralLoadingView here
-      loading: () => GeneralLoadingView(
-        message: l10n.t('loading_profile'), // "Loading your profile..."
-      ),
+    // If we have no user data and an error
+    if (user == null && userAsync.hasError) {
+      return const Center(child: Text("Error loading profile"));
+    }
 
-      // Ignore errors as per your requirement
-      error: (_, __) => const SizedBox(),
-
-      data: (user) => ProfileBodyView(
-        user: user,
-        headerTextColor: headerTextColor,
-        onJoinProvider: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            builder: (_) => const JoinProviderSheet(),
-          );
-        },
-      ),
+    // 3. Main Centered View with Integrated Loading Overlay
+    return ProfileBodyView(
+      user: user!,
+      headerTextColor: headerTextColor,
+      isLoading: isProcessing, // This triggers the Apple Blur
+      onJoinProvider: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent, // Allows for custom rounded sheet
+          builder: (_) => const JoinProviderSheet(),
+        );
+      },
     );
   }
 }

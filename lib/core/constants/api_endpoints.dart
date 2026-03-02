@@ -7,4 +7,8 @@ class ApiEndpoints {
   static const sendOtp = '/otp/send';
   static const verifyOtp = '/otp/verify';
 
+  // Customer profile
+  static const customerProfile = '/customer/profile';
+  static const customerAvatar = '/customer/avatar';
+
 }
