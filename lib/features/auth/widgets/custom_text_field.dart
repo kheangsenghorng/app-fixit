@@ -38,16 +38,21 @@ class _CustomTextFieldState extends State<CustomTextField> {
         onChanged: widget.onChanged,
         validator: widget.validator,
         autovalidateMode: AutovalidateMode.onUserInteraction, // 🔥 instant validation
-        style: TextStyle(color: colorScheme.onSurface),
+        style: TextStyle(
+          color: colorScheme.onSurface,
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+        ),
         decoration: InputDecoration(
           hintText: widget.hint,
           hintStyle: TextStyle(
-            color: colorScheme.onSurface.withValues(alpha: 0.6),
+            color: colorScheme.onSurface.withValues(alpha: 0.4),
+            fontSize: 16,
           ),
           prefixIcon: Icon(
             widget.icon,
-            color: colorScheme.onSurface.withValues(alpha: 0.7),
-            size: 20,
+            color: colorScheme.onSurface.withValues(alpha: 0.5),
+            size: 22,
           ),
           suffixIcon: widget.isPassword
               ? IconButton(
@@ -55,16 +60,31 @@ class _CustomTextFieldState extends State<CustomTextField> {
               _obscureText
                   ? Icons.visibility_off_outlined
                   : Icons.visibility_outlined,
-              color: colorScheme.onSurface.withValues(alpha: 0.7),
+              color: colorScheme.onSurface.withValues(alpha: 0.5),
+              size: 22,
             ),
             onPressed: () {
               setState(() => _obscureText = !_obscureText);
             },
           )
               : null,
-          contentPadding: const EdgeInsets.symmetric(vertical: 15),
+          filled: true,
+          fillColor: colorScheme.onSurface.withValues(alpha: 0.04),
+          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(
+              color: colorScheme.primary.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
           ),
         ),
       ),

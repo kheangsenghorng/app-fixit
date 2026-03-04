@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'provider_card.dart';
+import 'provider_card.dart'; // Ensure this is the Radius 32 version we built
 
 class HomeProviderList extends StatelessWidget {
   const HomeProviderList({super.key});
@@ -7,46 +7,48 @@ class HomeProviderList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 240,
+      // 1. INCREASED HEIGHT for the new Radius 32 cards
+      height: 260, 
       child: ListView(
         scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        // Matching the 20px horizontal padding of your screen
+        physics: const BouncingScrollPhysics(), // Premium smooth scrolling
         padding: const EdgeInsets.symmetric(horizontal: 20),
         children: [
           _providerItem(
             "Maskot Kota",
             "Plumber",
             "assets/images/providers/img.png",
-            const Color(0xFFE8D5F5),
-          ),
-          _providerItem(
-            "Maskot Kota",
-            "Plumber",
-            "assets/images/providers/img.png",
-            const Color(0xFFE5D5C5),
           ),
           _providerItem(
             "Shams Jan",
             "Electrician",
             "assets/images/providers/img.png",
-            const Color(0xFFD5F5E3),
+          ),
+          _providerItem(
+            "Lucas Scott",
+            "Painter",
+            "assets/images/providers/img.png",
+          ),
+          _providerItem(
+            "Jackson",
+            "Mechanic",
+            "assets/images/providers/img.png",
           ),
         ],
       ),
     );
   }
 
-  Widget _providerItem(String name, String job, String image, Color bgColor) {
+  Widget _providerItem(String name, String job, String image) {
     return Padding(
-      padding: const EdgeInsets.only(right: 15),
+      padding: const EdgeInsets.only(right: 16), // Balanced spacing
       child: SizedBox(
-        width: 180,
+        width: 185, // Fixed width for horizontal consistency
         child: ProviderCard(
           name: name,
           job: job,
           imagePath: image,
-          bgColor: bgColor,
+          // Note: bgColor is removed to keep the Pure Black/White theme
         ),
       ),
     );

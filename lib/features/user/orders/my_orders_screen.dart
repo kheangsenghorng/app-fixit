@@ -1,8 +1,8 @@
+import 'dart:ui';
 import 'package:fixit/features/user/orders/widgets/content_sheet_wrapper.dart';
 import 'package:fixit/features/user/orders/widgets/order_list_view.dart';
 import 'package:fixit/features/user/orders/widgets/order_tab_switcher.dart';
 import 'package:flutter/material.dart';
-import 'widgets/blurred_app_bar.dart';
 
 class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});
@@ -17,31 +17,79 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
+    // MONOCHROME COLORS
+    final scaffoldBg = isDark ? Colors.black : Colors.white;
+    final contentColor = isDark ? Colors.white : Colors.black;
+    final glassColor = isDark 
+        ? const Color(0xFF1A1A1A).withValues(alpha: 0.8) 
+        : Colors.white.withValues(alpha: 0.8);
+    final borderColor = isDark 
+        ? Colors.white.withValues(alpha: 0.1) 
+        : Colors.black.withValues(alpha: 0.05);
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const BlurredAppBar(title: "My Orders"),
-        backgroundColor: theme.scaffoldBackgroundColor,
-        automaticallyImplyLeading: false,
-        elevation: 0,
-      ),
-      body: Column(
+      backgroundColor: scaffoldBg,
+      body: Stack(
         children: [
-          SizedBox(height: MediaQuery.of(context).padding.top + 70),
-          /// 1. Navigation Section
-          OrderTabSwitcher(
-            selectedTab: selectedTab,
-            onTabChanged: (index) {
-              setState(() => selectedTab = index);
-            },
+          // 1. MAIN CONTENT
+          Column(
+            children: [
+              // Space for Floating Header
+              const SizedBox(height: 125),
+              
+              /// Navigation Section (Tabs)
+              OrderTabSwitcher(
+                selectedTab: selectedTab,
+                onTabChanged: (index) => setState(() => selectedTab = index),
+              ),
+              
+              const SizedBox(height: 25),
+
+              // Content Section (The Floating Card)
+              ContentSheetWrapper(
+                child: OrderListView(selectedTab: selectedTab),
+              ),
+              
+              // Bottom padding for Navigation Bar
+              const SizedBox(height: 100),
+            ],
           ),
-          const SizedBox(height: 20),
-          // 2. Content Section (The "Cut" Component)
-          ContentSheetWrapper(
-            child: OrderListView(selectedTab: selectedTab),
+
+          // 2. FLOATING GLASS HEADER
+          Positioned(
+            top: 50, left: 16, right: 16,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(35),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                child: Container(
+                  height: 60,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: glassColor,
+                    borderRadius: BorderRadius.circular(35),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "My Orders",
+                        style: TextStyle(
+                          color: contentColor,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 18,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      Icon(Icons.history_rounded, color: contentColor, size: 22),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),

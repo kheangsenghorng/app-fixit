@@ -1,42 +1,26 @@
 import 'package:flutter/material.dart';
 
-
 class ProfileAvatar extends StatelessWidget {
   final String? imageUrl;
   final double radius;
+  final Color contentColor;
 
-  const ProfileAvatar({
-    super.key,
-    this.imageUrl,
-    this.radius = 65, // Default size
-  });
+  const ProfileAvatar({super.key, this.imageUrl, this.radius = 60, required this.contentColor});
 
   @override
   Widget build(BuildContext context) {
-    // Determine which image to show
-    final ImageProvider image;
-    if (imageUrl != null && imageUrl!.startsWith('http')) {
-      image = NetworkImage(imageUrl!);
-    } else {
-      image = const AssetImage('assets/images/providers/img.png');
-    }
-
     return Container(
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 4),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 15,
-            spreadRadius: 5,
-          )
-        ],
+        border: Border.all(color: contentColor.withValues(alpha: 0.1), width: 1),
       ),
       child: CircleAvatar(
         radius: radius,
-        backgroundColor: Colors.grey.shade300,
-        backgroundImage: image,
+        backgroundColor: Colors.grey.shade200,
+        backgroundImage: (imageUrl != null) 
+          ? NetworkImage(imageUrl!) 
+          : const AssetImage('assets/images/providers/img.png') as ImageProvider,
       ),
     );
   }

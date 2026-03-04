@@ -3,114 +3,98 @@ import 'package:flutter/material.dart';
 class ProviderCard extends StatelessWidget {
   final String name;
   final String job;
-  final String rating;
-  final String? imagePath;
 
-  const ProviderCard({
-    super.key,
-    required this.name,
-    required this.job,
-    this.rating = "4.8",
-    this.imagePath,
-  });
+  const ProviderCard({super.key, required this.name, required this.job});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final activeColor = theme.colorScheme.primary;
 
+    // MONOCHROME THEME COLORS
+    final contentColor = isDark ? Colors.white : Colors.black;
+    final cardBg = isDark ? const Color(0xFF1A1A1A) : Colors.white;
+    final borderColor = isDark 
+        ? Colors.white.withValues(alpha: 0.1) 
+        : Colors.black.withValues(alpha: 0.05);
 
     return Container(
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
+      padding: const EdgeInsets.all(12),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Image Area
+          // 1. IMAGE AREA (Monochrome background)
           Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                width: double.infinity,
-                color: Colors.blue.shade50, // Background color if image fails
-                child: imagePath != null
-                    ? Image.asset(imagePath!, fit: BoxFit.cover)
-                    : Icon(Icons.person, size: 50, color: colorScheme.primary.withValues(alpha: 0.5)),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: activeColor.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(22),
               ),
+              child: Icon(Icons.person_rounded, size: 40, color: activeColor.withValues(alpha: 0.5)),
             ),
           ),
-
           const SizedBox(height: 12),
 
-          // 2. Name
+          // 2. NAME (Heavy Weight Typography)
           Text(
-            name,
-            style:  TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color:textTheme.titleMedium!.color,
-            ),
+            name, 
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-          ),
-
-          // 3. Job Title
-          Text(
-            job,
             style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 13,
-            ),
+              color: contentColor, 
+              fontWeight: FontWeight.w900, // Matches Profile style
+              fontSize: 16,
+              letterSpacing: -0.5,
+            )
           ),
+          
+          // 3. JOB
+          Text(
+            job, 
+            style: TextStyle(
+              color: contentColor.withValues(alpha: 0.4), 
+              fontSize: 12, 
+              fontWeight: FontWeight.w500
+            )
+          ),
+          
+          const SizedBox(height: 12),
 
-          const SizedBox(height: 10),
-
-          // 4. Rating and Details Button
+          // 4. ACTION ROW
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Icon(Icons.star, color: Colors.blue, size: 16),
-              const SizedBox(width: 4),
-              Text(
-                rating,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
+              Row(
+                children: [
+                  const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                  Text(" 4.9", style: TextStyle(color: contentColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                ],
               ),
-              const Spacer(),
-              // Details Button
-              GestureDetector(
-                onTap: () {
-                  // Navigate to details page
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary, // Using your 0xFF0056D2 blue
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    "Details",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+              // DETAILS BUTTON (Pill shape)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: activeColor,
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              ),
+                child: const Text(
+                  "Details", 
+                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)
+                ),
+              )
             ],
           )
         ],

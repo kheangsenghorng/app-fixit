@@ -16,17 +16,21 @@ class EditProfileForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final contentColor = isDark ? Colors.white : Colors.black;
+
     return Container(
       constraints: const BoxConstraints(maxWidth: 500),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        // PURE WHITE/BLACK BG
+        color: isDark ? Colors.black : Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        // NO BORDER, JUST SOFT SHADOW
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: isDark ? Colors.white.withValues(alpha: 0.02) : Colors.black.withValues(alpha: 0.03),
             blurRadius: 20,
-            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -34,21 +38,24 @@ class EditProfileForm extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           CustomTextField(
-            label: "Full Name",
-            hint: "Enter name",
+            label: "FULL NAME",
+            hint: "Enter your name",
             controller: nameController,
+            contentColor: contentColor,
           ),
-          const Divider(height: 32, thickness: 0.5),
+          const SizedBox(height: 30),
           CustomTextField(
-            label: "Email Address",
-            hint: "Enter email",
+            label: "EMAIL ADDRESS",
+            hint: "Enter your email",
             controller: emailController,
+            contentColor: contentColor,
           ),
-          const Divider(height: 32, thickness: 0.5),
+          const SizedBox(height: 30),
           PhoneInputField(
-            label: "Phone Number",
-            hint: "+92 300 1234567",
+            label: "PHONE NUMBER",
+            hint: "012 345 678",
             controller: phoneController,
+            contentColor: contentColor,
           ),
         ],
       ),

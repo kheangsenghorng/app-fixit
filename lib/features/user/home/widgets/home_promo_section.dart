@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'promo_banner.dart';
-import 'section_header.dart';
 
 class HomePromoSection extends StatelessWidget {
   final TextEditingController searchController;
@@ -28,12 +27,15 @@ class HomePromoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final contentColor = isDark ? Colors.white : Colors.black;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          const SizedBox(height: 25),
-          // Your extracted Banner & Search logic
+          const SizedBox(height: 10),
+          // PROMO BANNER & GLASS SEARCH
           PromoBanner(
             controller: searchController,
             focusNode: searchFocusNode,
@@ -45,11 +47,29 @@ class HomePromoSection extends StatelessWidget {
             onNavTap: onNavTap,
           ),
 
-          const SizedBox(height: 40),
-          // Section Title
-          SectionHeader(
-            title: "Popular Services",
-            onTap: onPopularServicesTap,
+          const SizedBox(height: 55),
+
+          // SECTION HEADER (MONOCHROME & W900)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Popular Services",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900, // Matches Profile Name
+                  color: contentColor,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              TextButton(
+                onPressed: onPopularServicesTap,
+                child: const Text(
+                  "View all",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
           ),
         ],
       ),

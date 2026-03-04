@@ -1,9 +1,10 @@
 import 'package:fixit/features/auth/presentation/providers/auth_controller.dart';
 import 'package:fixit/features/auth/presentation/ui/login_sheet.dart';
-import 'package:fixit/features/user/city/city_screen.dart';
 import 'package:fixit/features/user/home/home_screen.dart';
 import 'package:fixit/features/user/orders/my_orders_screen.dart';
 import 'package:fixit/features/user/profile/profile_screen.dart';
+import 'package:fixit/features/user/profile/settings/settings_screen.dart';
+import 'package:fixit/features/user/search/search_result_screen.dart';
 import 'package:fixit/features/user/services/popular/popular_services_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,7 +32,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void _handleNavTap(int index, {bool pop = false}) {
-    final requiresLogin = index == 2 || index == 3;
+    final requiresLogin = index == 2 || index == 4;
 
     final authState = ref.watch(authControllerProvider);
 
@@ -81,8 +82,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         currentIndex: _selectedIndex,
         onNavTap: (index) => _handleNavTap(index),
       ),
-      const CityScreen(),
+      const SearchResultScreen(),
       const MyOrdersScreen(),
+      const SettingsScreen(),
       const ProfileScreen(),
     ];
 
