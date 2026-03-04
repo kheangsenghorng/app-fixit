@@ -6,30 +6,21 @@ class ProfileHeader extends StatelessWidget {
   final String? imageUrl;
   final Color textColor;
 
-  const ProfileHeader({
-    super.key,
-    required this.name,
-    this.imageUrl,
-    required this.textColor,
-  });
+  const ProfileHeader({super.key, required this.name, this.imageUrl, required this.textColor});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
+        ProfileAvatar(imageUrl: imageUrl, contentColor: textColor),
         const SizedBox(height: 20),
-        // We use the Avatar class here
-        ProfileAvatar(
-          imageUrl: imageUrl,
-          radius: 60, // You can control size here
-        ),
-        const SizedBox(height: 15),
         Text(
           name,
-          style: Theme.of(context).textTheme.displayLarge?.copyWith(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w900,
             color: textColor,
+            letterSpacing: -0.5,
           ),
         ),
       ],

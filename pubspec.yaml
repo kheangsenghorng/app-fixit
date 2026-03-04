@@ -56,7 +56,6 @@ flutter:
   uses-material-design: true
   assets:
     - .env
-    - .env.test
     - assets/fixit_logo.png
     - assets/images/
     - assets/images/providers/

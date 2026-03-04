@@ -22,20 +22,23 @@ class SignUpSheetBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authControllerProvider);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SheetDragHandle(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           const AuthHeader(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
           const SignUpTitle(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           const SignUpForm(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
 
           SignUpSubmitButton(
             loading: auth.isLoading,
@@ -72,10 +75,13 @@ class SignUpSheetBody extends ConsumerWidget {
             },
           ),
 
+          const SizedBox(height: 24),
           const SocialAuthDivider(isSignUp: true),
+          const SizedBox(height: 16),
           const SocialLoginSection(),
           const SizedBox(height: 24),
           const LoginRedirect(),
+          const SizedBox(height: 10),
         ],
       ),
     );

@@ -1,5 +1,5 @@
+import 'dart:ui'; // REQUIRED for ImageFilter
 import 'package:flutter/material.dart';
-import 'order_tab.dart'; // Ensure this points to your OrderTab component
 
 class OrderTabSwitcher extends StatelessWidget {
   final int selectedTab;
@@ -13,35 +13,83 @@ class OrderTabSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // 1. EXACT HEADER COLORS & GLASS LOGIC
+    final glassColor = isDark 
+        ? const Color(0xFF1A1A1A).withValues(alpha: 0.7) 
+        : Colors.white.withValues(alpha: 0.8);
+    
+    final borderColor = isDark 
+        ? Colors.white.withValues(alpha: 0.1) 
+        : Colors.black.withValues(alpha: 0.05);
+        
+    final contentColor = isDark ? Colors.white : Colors.black;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Container(
-        height: 56,
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white10 : Colors.black12,
-          borderRadius: BorderRadius.circular(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(35), // Matches Header Radius
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15), // Matches Header Blur
+          child: Container(
+            height: 60, // Matches Header Height
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: glassColor,
+              borderRadius: BorderRadius.circular(35),
+              border: Border.all(color: borderColor, width: 1),
+            ),
+            child: Row(
+              children: [
+                _buildTab(0, "Unpaid", isDark, contentColor),
+                _buildTab(1, "History", isDark, contentColor),
+                _buildTab(2, "Schedule", isDark, contentColor),
+              ],
+            ),
+          ),
         ),
-        child: Row(
-          children: [
-            OrderTab(
-              label: "Unpaid",
-              isSelected: selectedTab == 0,
-              onTap: () => onTabChanged(0),
+      ),
+    );
+  }
+
+  Widget _buildTab(int index, String label, bool isDark, Color contentColor) {
+    final bool isSelected = selectedTab == index;
+
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => onTabChanged(index),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          decoration: BoxDecoration(
+            // The active "pill" inside the glass
+            color: isSelected 
+                ? (isDark ? Colors.white : Colors.black) 
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              if (isSelected)
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                )
+            ],
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500,
+              color: isSelected 
+                  ? (isDark ? Colors.black : Colors.white) 
+                  : contentColor.withValues(alpha: 0.4),
+              letterSpacing: 0.2,
             ),
-            OrderTab(
-              label: "History",
-              isSelected: selectedTab == 1,
-              onTap: () => onTabChanged(1),
-            ),
-            OrderTab(
-              label: "Schedule",
-              isSelected: selectedTab == 2,
-              onTap: () => onTabChanged(2),
-            ),
-          ],
+          ),
         ),
       ),
     );

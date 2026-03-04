@@ -1,6 +1,5 @@
-
 import 'package:flutter/material.dart';
-import 'section_header.dart';
+import 'section_header.dart'; // Ensure this matches the w900 version we built
 import 'home_provider_list.dart';
 
 class HomeProviderSection extends StatelessWidget {
@@ -13,26 +12,30 @@ class HomeProviderSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final contentColor = isDark ? Colors.white : Colors.black;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 25),
+        const SizedBox(height: 10),
 
-        // Header stays within the 20px padding
+        // SECTION HEADER (MONOCHROME & W900)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: SectionHeader(
             title: "Service Providers",
+            contentColor: contentColor, // Matches the Profile logic
             onTap: onSeeAllTap,
           ),
         ),
 
-        const SizedBox(height: 15),
+        const SizedBox(height: 20),
 
-        // List scrolls edge-to-edge (Padding should be INSIDE HomeProviderList)
+        // List scrolls edge-to-edge
         const HomeProviderList(),
 
-        const SizedBox(height: 100), // Bottom spacing for navigation/FAB
+        const SizedBox(height: 110), // Bottom spacing for Floating Nav
       ],
     );
   }

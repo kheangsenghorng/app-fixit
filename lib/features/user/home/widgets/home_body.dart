@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-// Import your local widgets
 import 'home_category_list.dart';
 import 'home_promo_section.dart';
 import 'home_provider_section.dart';
-
 
 class HomeBody extends StatelessWidget {
   final TextEditingController searchController;
@@ -33,13 +31,13 @@ class HomeBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Positioned.fill(
       child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const BouncingScrollPhysics(), // Premium Feel
         child: Column(
           children: [
-            // Space for the sticky app bar (Dynamic height)
-            SizedBox(height: MediaQuery.of(context).padding.top + 70),
+            // 1. SPACE FOR FLOATING HEADER (120px is ideal)
+            const SizedBox(height: 125),
 
-            // 1. Promo & Search Area
+            // 2. PROMO & SEARCH AREA
             HomePromoSection(
               searchController: searchController,
               searchFocusNode: searchFocusNode,
@@ -52,15 +50,20 @@ class HomeBody extends StatelessWidget {
               onNavTap: onNavTap,
             ),
 
-            const SizedBox(height: 15),
-            // We previously extracted this to HomeCategoryList
+            const SizedBox(height: 30),
 
+            // 3. CATEGORIES
             HomeCategoryList(currentIndex: currentIndex),
 
-           // 4. Service Providers Section
+            const SizedBox(height: 15),
+
+            // 4. SERVICE PROVIDERS
             HomeProviderSection(
               onSeeAllTap: () {},
             ),
+            
+            // 5. BOTTOM NAV SPACE
+            const SizedBox(height: 110),
           ],
         ),
       ),

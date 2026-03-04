@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../routes/app_routes.dart';
 import '../details/order_details_screen.dart';
-import 'order_card.dart'; // Ensure this points to your OrderCard file
+import 'order_card.dart';
 
 class OrderListView extends StatelessWidget {
   final int selectedTab;
@@ -13,22 +13,33 @@ class OrderListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
+    final contentColor = isDark ? Colors.white : Colors.black;
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 35),
+      physics: const BouncingScrollPhysics(),
+      // Padding matches the "Floating Card" inner space
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
       children: [
-        // 1. Dynamic Section Header
+        // 1. SECTION HEADER (Matches Profile Name Style)
         Text(
           _getSectionTitle(),
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.w800,
+          style: TextStyle(
+            color: contentColor,
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.5,
           ),
         ),
         const SizedBox(height: 25),
 
-        // 2. Conditional Order Content
+        // 2. CONTENT
         _buildActiveTabContent(context, primaryColor),
+        
+        // Extra bottom space
+        const SizedBox(height: 20),
       ],
     );
   }
@@ -42,6 +53,7 @@ class OrderListView extends StatelessWidget {
   }
 
   Widget _buildActiveTabContent(BuildContext context, Color primaryColor) {
+    // Note: Ensure your OrderCard also follows the "No Border" and "Stadium Button" UI
     if (selectedTab == 0) {
       return OrderCard(
         icon: Icons.shopping_cart_outlined,
@@ -52,14 +64,7 @@ class OrderListView extends StatelessWidget {
         statusLabel: "Unpaid",
         statusColor: Colors.orange,
         actionButtonText: "Pay Now",
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const OrderDetailsScreen(),
-            ),
-          );
-        },
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OrderDetailsScreen())),
         onActionPressed: () => Navigator.pushNamed(context, '/payment'),
       );
     } else if (selectedTab == 1) {
@@ -71,19 +76,12 @@ class OrderListView extends StatelessWidget {
         activeColor: primaryColor,
         statusLabel: "Paid",
         statusColor: Colors.green,
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const OrderDetailsScreen(),
-            ),
-          );
-        },
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OrderDetailsScreen())),
       );
     } else {
       return OrderCard(
         icon: Icons.cleaning_services_outlined,
-        amount: "30",
+        amount: "30.00",
         date: "Jan 04, 2024",
         time: "10:00 AM",
         expertName: "Emily Jani",
@@ -91,18 +89,8 @@ class OrderListView extends StatelessWidget {
         statusLabel: "Scheduled",
         statusColor: Colors.blue,
         actionButtonText: "Cancel Booking",
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const OrderDetailsScreen(),
-            ),
-          );
-        },
-        onActionPressed: () => Navigator.pushNamed(
-          context,
-          AppRoutes.orderDetails, // Use the constant
-        ),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OrderDetailsScreen())),
+        onActionPressed: () => Navigator.pushNamed(context, AppRoutes.orderDetails),
       );
     }
   }

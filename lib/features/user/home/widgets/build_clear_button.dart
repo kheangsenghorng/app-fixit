@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 
-Widget buildClearButton() {
-  GestureTapCallback? onClear;
+Widget buildClearButton({
+  required VoidCallback onClear,
+  required Color contentColor,
+}) {
   return GestureDetector(
     onTap: onClear,
     child: Container(
-      margin: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
-        color: Color(0xFFE8F0FE),
+      margin: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: contentColor.withValues(alpha: 0.1), // Subtle monochrome circle
         shape: BoxShape.circle,
       ),
-      child: const Icon(Icons.close, size: 16, color: Color(0xFF004AAD)),
+      child: Icon(
+        Icons.close_rounded, 
+        size: 14, 
+        color: contentColor.withValues(alpha: 0.8)
+      ),
     ),
   );
 }

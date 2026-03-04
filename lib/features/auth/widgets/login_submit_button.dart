@@ -14,23 +14,22 @@ class LoginSubmitButton extends ConsumerWidget {
     final formData = ref.watch(loginFormProvider);
     final formKey = ref.watch(loginFormKeyProvider);
 
-    // Primary color matching your theme
-    const primaryBlue = Color(0xFF0056D2);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return SizedBox(
       width: double.infinity,
       height: 55,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryBlue,
-          foregroundColor: Colors.white,
-          elevation: 4,
-          shadowColor: primaryBlue.withValues(alpha: 0.4),
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
+          elevation: 0, // Flat look like Telegram
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16), // Modern rounded corners
+            borderRadius: BorderRadius.circular(16),
           ),
           // Disabled style
-          disabledBackgroundColor: primaryBlue.withValues(alpha: 0.6),
+          disabledBackgroundColor: colorScheme.primary.withOpacity(0.6),
         ),
         onPressed: authState.isLoading
             ? null

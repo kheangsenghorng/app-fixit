@@ -1,3 +1,4 @@
+import 'dart:ui'; // REQUIRED for ImageFilter
 import 'package:fixit/features/auth/presentation/providers/auth_controller.dart';
 import 'package:fixit/features/user/profile/providers/user_provider.dart';
 import 'package:fixit/features/user/profile/widgets/join_provider_sheet.dart';
@@ -6,7 +7,6 @@ import 'package:fixit/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../widgets/custom_header_bar.dart';
 import '../../../widgets/general/general_loading_view.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -15,69 +15,137 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
     final auth = ref.watch(authControllerProvider);
     final userAsync = ref.watch(userProvider);
 
-    final isLight = theme.colorScheme.surface.computeLuminance() > 0.5;
-    final headerTextColor = isLight ? const Color(0xFF002B5B) : Colors.white;
+    // 1. BLACK AND WHITE THEME LOGIC
+    // Background: Pure black for dark, Pure white for light
+    final scaffoldBg = isDark ? Colors.black : Colors.white;
+    
+    // Header Content (Text/Icons): White for dark mode, Black for light mode
+    final contentColor = isDark ? Colors.white : Colors.black;
+
+    // Header Glass Color
+    final headerBg = isDark 
+        ? const Color(0xFF1A1A1A).withValues(alpha: 0.8) // Very dark grey glass
+        : Colors.white.withValues(alpha: 0.8);
+
+    final borderColor = isDark 
+        ? Colors.white.withValues(alpha: 0.1) 
+        : Colors.black.withValues(alpha: 0.05);
 
     return Scaffold(
-      appBar: CustomHeaderBar(
-        title: l10n.t('my_profile'),
-        showBackButton: false,
-      ),
-      body: RefreshIndicator.adaptive( // Adaptive makes it look like iOS
-        onRefresh: () async {
-          await ref.read(userProvider.notifier).refresh();
-        },
-        child: _buildBody(auth, userAsync, l10n, headerTextColor, context),
+      backgroundColor: scaffoldBg,
+      body: Stack(
+        children: [
+          // 2. MAIN BODY CONTENT
+          RefreshIndicator.adaptive(
+            edgeOffset: 110,
+            onRefresh: () async => await ref.read(userProvider.notifier).refresh(),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+              padding: const EdgeInsets.only(top: 130, bottom: 100),
+              child: _buildBody(auth, userAsync, l10n, theme, contentColor, context),
+            ),
+          ),
+
+          // 3. FLOATING HEADER (BLACK & WHITE DESIGN)
+          Positioned(
+            top: 50,
+            left: 16,
+            right: 16,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(35),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                child: Container(
+                  height: 60,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: headerBg,
+                    borderRadius: BorderRadius.circular(35),
+                    border: Border.all(color: borderColor, width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black : Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      )
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // TITLE IN BLACK/WHITE
+                      Text(
+                        l10n.t('my_profile'),
+                        style: TextStyle(
+                          color: contentColor, // Black or White text
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      
+                      // SETTINGS ICON IN BLACK/WHITE
+                      IconButton(
+                        onPressed: () {},
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: Icon(
+                          Icons.settings_outlined, 
+                          color: contentColor, // Black or White icon
+                          size: 22
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildBody(
-      AsyncValue auth,
-      AsyncValue userAsync,
-      AppLocalizations l10n,
-      Color headerTextColor,
-      BuildContext context,
-      ) {
-    // 1. Check Auth Loading
-    if (auth.isLoading && auth.value == null) {
-      return const GeneralLoadingView();
-    }
-
+    AsyncValue auth,
+    AsyncValue userAsync,
+    AppLocalizations l10n,
+    ThemeData theme,
+    Color contentColor,
+    BuildContext context,
+  ) {
+    if (auth.isLoading && auth.value == null) return const GeneralLoadingView();
     if (auth.value == null) return const SizedBox();
 
-    // 2. Optimized Data Loading Logic
-    // We use .value to keep existing data on screen while refreshing/updating
     final user = userAsync.value;
-
-    // Determine if we show the blur overlay (refreshing OR loading while data exists)
     final bool isProcessing = userAsync.isRefreshing || (userAsync.isLoading && user != null);
 
-    // If we have no user data and we are loading, show full screen spinner
     if (user == null && userAsync.isLoading) {
-      return GeneralLoadingView(message: l10n.t('loading_profile'));
+      return Padding(
+        padding: const EdgeInsets.only(top: 100),
+        child: GeneralLoadingView(message: l10n.t('loading_profile')),
+      );
     }
 
-    // If we have no user data and an error
     if (user == null && userAsync.hasError) {
       return const Center(child: Text("Error loading profile"));
     }
 
-    // 3. Main Centered View with Integrated Loading Overlay
     return ProfileBodyView(
       user: user!,
-      headerTextColor: headerTextColor,
-      isLoading: isProcessing, // This triggers the Apple Blur
+      headerTextColor: contentColor, // Pass Black or White to the body
+      isLoading: isProcessing,
       onJoinProvider: () {
         showModalBottomSheet(
           context: context,
           isScrollControlled: true,
-          backgroundColor: Colors.transparent, // Allows for custom rounded sheet
+          backgroundColor: Colors.transparent,
           builder: (_) => const JoinProviderSheet(),
         );
       },

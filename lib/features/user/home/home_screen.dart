@@ -3,15 +3,12 @@ import 'package:fixit/features/user/home/widgets/home_body.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
-
   final VoidCallback onPopularServicesTap;
   final int currentIndex;
-
   final Function(int)? onNavTap;
 
   const HomeScreen({
     super.key,
-
     required this.onPopularServicesTap,
     required this.currentIndex,
     this.onNavTap,
@@ -22,13 +19,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   final TextEditingController _searchController = TextEditingController();
-
   final FocusNode _searchFocusNode = FocusNode();
-
   bool _isSearching = false;
-
 
   final List<Map<String, String>> _allRecentSearches = [
     {'title': 'Plumber', 'results': '232 results'},
@@ -42,29 +35,27 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _filteredResults = _allRecentSearches; // Initial state
+    _filteredResults = _allRecentSearches;
     _searchController.addListener(_onSearchChanged);
   }
+
   @override
   void dispose() {
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
   }
-  void _onSearchTap() {
-    setState(() {
-      _isSearching = true;
-    });
-  }
+
+  void _onSearchTap() => setState(() => _isSearching = true);
 
   void _onClear() {
     _searchController.clear();
     setState(() {
       _isSearching = false;
-      // Close keyboard
       FocusScope.of(context).unfocus();
     });
   }
+
   void _onSearchChanged() {
     final query = _searchController.text.toLowerCase();
     setState(() {
@@ -73,16 +64,18 @@ class _HomeScreenState extends State<HomeScreen> {
           .toList();
     });
   }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      // 1. BLACK & WHITE BACKGROUND
+      backgroundColor: isDark ? Colors.black : Colors.white,
       body: Stack(
         children: [
-          // 1. SCROLLABLE CONTENT
-           HomeBody(
+          // 2. MAIN CONTENT
+          HomeBody(
             searchController: _searchController,
             searchFocusNode: _searchFocusNode,
             isSearching: _isSearching,
@@ -93,11 +86,12 @@ class _HomeScreenState extends State<HomeScreen> {
             onPopularServicesTap: widget.onPopularServicesTap,
             onNavTap: widget.onNavTap,
           ),
-          // 2. EXTRACTED BLURRED APP BAR
+
+          // 3. FLOATING GLASS APP BAR
           const Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
+            top: 50,
+            left: 16,
+            right: 16,
             child: HomeAppBar(),
           ),
         ],

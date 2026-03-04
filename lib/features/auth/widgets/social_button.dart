@@ -18,17 +18,17 @@ class SocialButton extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Material(
-      color: colorScheme.surface,
-      borderRadius: BorderRadius.circular(8),
+      color: Colors.transparent, // Let Container handle it for better control
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Container(
-          height: 50,
+          height: 54,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
+            color: colorScheme.onSurface.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: colorScheme.onSurface.withValues(alpha: 0.2),
+              color: colorScheme.onSurface.withValues(alpha: 0.08),
             ),
           ),
           child: Row(
