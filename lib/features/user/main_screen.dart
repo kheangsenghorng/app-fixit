@@ -37,7 +37,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final authState = ref.watch(authControllerProvider);
 
     final isLoggedIn = authState.maybeWhen(
-      data: (auth) => auth?.token != null && auth!.token.isNotEmpty,
+      data: (auth) => auth?.token?.isNotEmpty == true,
       orElse: () => false,
     );
 

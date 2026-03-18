@@ -20,6 +20,7 @@ dependencies:
   # ✅ Riverpod (stable 2.x)
   flutter_riverpod: ^2.5.1
   riverpod_annotation: ^2.3.5
+  pusher_channels_flutter: ^2.5.0
 
   sheet: ^1.0.0
   geolocator: ^14.0.2

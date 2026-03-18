@@ -1,63 +1,119 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import './get_service_screen/get_service_screen.dart'; 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import './get_service_screen/get_service_screen.dart';
+import 'data/providers/types_provider.dart';
 import 'widgets/filter_sheet.dart';
 import 'widgets/provider_card.dart';
 
-class SearchResultScreen extends StatefulWidget {
+class SearchResultScreen extends ConsumerStatefulWidget {
   final String? query;
+
   const SearchResultScreen({super.key, this.query});
 
   @override
-  State<SearchResultScreen> createState() => _SearchResultScreenState();
+  ConsumerState<SearchResultScreen> createState() => _SearchResultScreenState();
 }
 
-class _SearchResultScreenState extends State<SearchResultScreen> {
-  int selectedCategoryIndex = 0;
-
-  final List<String> categories = ["All", "Cleaning", "Repair", "Electric", "Plumbing", "Paint"];
+class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
+  int selectedCategoryIndex = 0; // 0 is "All"
+  final ScrollController _scrollController = ScrollController();
 
   @override
+  void initState() {
+    super.initState();
+    // Fetch data on load
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
+        ref.read(typeProvider.notifier).fetchActiveTypes(loadMore: true);
+      }
+    });
+
+    Future.microtask(() {
+      ref.read(typeProvider.notifier).fetchActiveTypes();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+  @override
   Widget build(BuildContext context) {
+    final typeState = ref.watch(typeProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
-    // 1. BLACK & WHITE MONOCHROME LOGIC
+
+    // --- LOGIC: EXTRACT UNIQUE CATEGORIES ---
+    // Since the API returns "Types", and multiple types share one category,
+    // we need to filter them so "Repair" only shows once in the sidebar.
+    final List<dynamic> uniqueCategories = [];
+    final Set<int> seenCategoryIds = {};
+
+    for (var type in typeState.types) {
+      if (!seenCategoryIds.contains(type.category.id)) {
+        seenCategoryIds.add(type.category.id);
+        uniqueCategories.add(type.category);
+      }
+    }
+
+    // --- LOGIC: FILTER RESULTS ---
+    // If "All" (index 0) is selected, show everything.
+    // Otherwise, show only types belonging to the selected category.
+    final filteredTypes = selectedCategoryIndex == 0
+        ? typeState.types
+        : typeState.types
+        .where((t) => t.category.id == uniqueCategories[selectedCategoryIndex - 1].id)
+        .toList();
+
+    // --- THEME COLORS ---
     final scaffoldBg = isDark ? Colors.black : Colors.white;
     final contentColor = isDark ? Colors.white : Colors.black;
-    final glassColor = isDark 
-        ? const Color(0xFF1A1A1A).withValues(alpha: 0.8) 
+    final glassColor = isDark
+        ? const Color(0xFF1A1A1A).withValues(alpha: 0.8)
         : Colors.white.withValues(alpha: 0.8);
-    final borderColor = isDark 
-        ? Colors.white.withValues(alpha: 0.1) 
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
         : Colors.black.withValues(alpha: 0.05);
-    final activeColor = theme.colorScheme.primary; // Your Unit Blue
+    final activeColor = theme.colorScheme.primary;
 
     return Scaffold(
       backgroundColor: scaffoldBg,
       body: Stack(
         children: [
-          // 2. MAIN CONTENT (Split View)
           Padding(
-            padding: const EdgeInsets.only(top: 120), // Space for floating header
+            padding: const EdgeInsets.only(top: 120),
             child: Row(
               children: [
-                // LEFT SIDEBAR (Clean Categories)
+                // --- LEFT SIDEBAR (CATEGORIES) ---
                 Container(
                   width: 90,
                   decoration: BoxDecoration(
-                    border: Border(right: BorderSide(color: borderColor, width: 0.5)),
+                    border: Border(
+                      right: BorderSide(color: borderColor, width: 0.5),
+                    ),
                   ),
-                  child: ListView.builder(
-                    itemCount: categories.length,
+                  child: typeState.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ListView.builder(
+                    itemCount: uniqueCategories.length + 1,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     itemBuilder: (context, index) {
                       final isSelected = selectedCategoryIndex == index;
+
+                      // Get Label and Icon
+                      final String label = index == 0 ? "All" : uniqueCategories[index - 1].name;
+                      final String? iconUrl = index == 0 ? null : uniqueCategories[index - 1].icon;
+
                       return GestureDetector(
                         onTap: () => setState(() => selectedCategoryIndex = index),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
-                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 8),
                           decoration: BoxDecoration(
+                            color: isSelected ? activeColor.withValues(alpha: 0.08) : Colors.transparent,
                             border: Border(
                               left: BorderSide(
                                 color: isSelected ? activeColor : Colors.transparent,
@@ -65,15 +121,35 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
                               ),
                             ),
                           ),
-                          child: Text(
-                            categories[index],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500,
-                              color: isSelected ? activeColor : contentColor.withValues(alpha: 0.4),
-                              letterSpacing: 0.2,
-                            ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              index == 0
+                                  ? Icon(Icons.grid_view_rounded,
+                                  size: 24,
+                                  color: isSelected ? activeColor : contentColor.withValues(alpha: 0.3))
+                                  : Image.network(
+                                iconUrl!,
+                                height: 24,
+                                width: 24,
+                                color: isSelected ? activeColor : contentColor.withValues(alpha: 0.3),
+                                errorBuilder: (_, __, ___) => Icon(Icons.category,
+                                    size: 24,
+                                    color: isSelected ? activeColor : contentColor.withValues(alpha: 0.3)),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                label,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                  color: isSelected ? activeColor : contentColor.withValues(alpha: 0.4),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -81,15 +157,25 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
                   ),
                 ),
 
-                // RIGHT RESULTS AREA
+                // --- RIGHT RESULTS AREA ---
                 Expanded(
-                  child: SingleChildScrollView(
+                  child: typeState.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : SingleChildScrollView(
+                    controller: _scrollController,
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     child: Column(
                       children: [
                         _buildFeaturedServiceCard(context, theme, activeColor),
                         const SizedBox(height: 25),
+
+                        if (filteredTypes.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 40),
+                            child: Text("No services found", style: TextStyle(color: contentColor.withValues(alpha: 0.5))),
+                          ),
+
                         GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
@@ -99,15 +185,17 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
                             crossAxisSpacing: 15,
                             mainAxisSpacing: 15,
                           ),
-                          itemCount: 6,
+                          itemCount: filteredTypes.length,
                           itemBuilder: (context, index) {
-                            return const ProviderCard(
-                              name: "Jackson",
-                              job: "Electrician",
+                            final item = filteredTypes[index];
+                            return ProviderCard(
+                              name: item.name, // The Type name (e.g. Electrician)
+                              job: item.category.name, // The Category name (e.g. Repair)
+                              imageUrl: item.icon,
                             );
                           },
                         ),
-                        const SizedBox(height: 100), // Space for Bottom Nav
+                        const SizedBox(height: 100),
                       ],
                     ),
                   ),
@@ -116,7 +204,7 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
             ),
           ),
 
-          // 3. FLOATING GLASS HEADER (Matches Search/Profile Top Bar)
+          // --- FLOATING GLASS HEADER ---
           Positioned(
             top: 50,
             left: 16,
@@ -135,10 +223,6 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
                   ),
                   child: Row(
                     children: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_back_ios_new, size: 18, color: contentColor),
-                        onPressed: () => Navigator.pop(context),
-                      ),
                       Expanded(
                         child: TextField(
                           style: TextStyle(color: contentColor, fontWeight: FontWeight.w500),
@@ -150,7 +234,7 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.tune_rounded, color: activeColor), // Unit Blue for filter
+                        icon: Icon(Icons.tune_rounded, color: activeColor),
                         onPressed: () {
                           showModalBottomSheet(
                             context: context,
@@ -173,9 +257,10 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
 
   Widget _buildFeaturedServiceCard(BuildContext context, ThemeData theme, Color activeColor) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: activeColor, // Featured card keeps primary brand color
+        color: activeColor,
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
@@ -190,12 +275,19 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
         children: [
           const Text(
             "FEATURED SERVICE",
-            style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+            style: TextStyle(
+                color: Colors.white70,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2),
           ),
           const SizedBox(height: 8),
           const Text(
             "Professional Repair",
-            style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 20),
           SizedBox(

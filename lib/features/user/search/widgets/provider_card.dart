@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 class ProviderCard extends StatelessWidget {
   final String name;
   final String job;
+  final String imageUrl;
 
-  const ProviderCard({super.key, required this.name, required this.job});
+  const ProviderCard({super.key, required this.name, required this.job,required this.imageUrl});
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +37,7 @@ class ProviderCard extends StatelessWidget {
       child: Column(
         children: [
           // 1. IMAGE AREA (Monochrome background)
+          // Inside provider_card.dart -> Image Area
           Expanded(
             child: Container(
               width: double.infinity,
@@ -43,7 +45,15 @@ class ProviderCard extends StatelessWidget {
                 color: activeColor.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(22),
               ),
-              child: Icon(Icons.person_rounded, size: 40, color: activeColor.withValues(alpha: 0.5)),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(22),
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain, // Since these are icons
+                  errorBuilder: (context, error, stackTrace) =>
+                      Icon(Icons.person_rounded, size: 40, color: activeColor.withValues(alpha: 0.5)),
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 12),

@@ -54,7 +54,7 @@ class HomePromoSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Popular Services",
+                "Category Services",
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w900, // Matches Profile Name

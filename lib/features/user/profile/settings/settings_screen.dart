@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'package:fixit/features/user/profile/providers/user_provider.dart';
 import 'package:fixit/features/user/profile/widgets/language_picker_sheet.dart';
 import 'package:fixit/features/user/profile/widgets/logout_dialog.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/provider/theme_provider.dart';
 import '../../../../core/provider/language_provider.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../routes/app_routes.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
+import '../providers/user_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -28,8 +27,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     
     final themeMode = ref.watch(themeNotifierProvider);
     final currentLocale = ref.watch(languageNotifierProvider);
-    final userAsync = ref.watch(userProvider);
-    final user = userAsync.value;
+    // final userAsync = ref.watch(userProvider);
+    // final user = userAsync.value;
 
     // MONOCHROME UI COLORS
     final scaffoldBg = isDark ? Colors.black : Colors.white;
@@ -249,15 +248,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (dialogContext) => LogoutDialog(
         onConfirm: () async {
           Navigator.pop(dialogContext);
+
+          // 🔄 Loading
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (context) => const Center(child: CircularProgressIndicator(color: Colors.black)),
+            builder: (_) => const Center(
+              child: CircularProgressIndicator(),
+            ),
           );
-          await Future.delayed(const Duration(seconds: 2));
+
+          // ✅ Logout
+          await ref.read(authControllerProvider.notifier).logout();
+
+          // ✅ IMPORTANT: invalidate OUTSIDE controller
+          ref.invalidate(userProvider);
+
           if (context.mounted) {
-            await ref.read(authControllerProvider.notifier).logout();
-            if (context.mounted) Navigator.of(context).pop();
+            Navigator.of(context).pop(); // close loading
+
+            // 🚀 Go to login screen
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/login',
+                  (route) => false,
+            );
           }
         },
       ),

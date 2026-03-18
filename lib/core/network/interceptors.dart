@@ -37,6 +37,23 @@ class AuthInterceptor extends Interceptor {
       ) async {
     final path = err.requestOptions.path;
 
+    final isAuthRoute =
+        path.contains(ApiEndpoints.login) ||
+            path.contains(ApiEndpoints.verifyOtp) ||
+            path.contains(ApiEndpoints.sendOtp);
+
+    // ❌ DO NOT REFRESH during auth / OTP flow
+    if (isAuthRoute) {
+      return handler.next(err);
+    }
+
+    // ❌ Only handle 401 when token exists
+    final token = await TokenStorage.get();
+    if (token == null) {
+      return handler.next(err);
+    }
+
+    // ✅ REFRESH TOKEN
     if (err.response?.statusCode == 401 &&
         !_isRefreshing &&
         !_isLoggingOut &&
@@ -54,9 +71,13 @@ class AuthInterceptor extends Interceptor {
         final auth = await repo.refreshToken();
         final newToken = auth.token;
 
+        // ✅ SAVE TOKEN (IMPORTANT)
+        await TokenStorage.save(newToken!);
+
+        // ✅ UPDATE STATE
         ref.read(authControllerProvider.notifier).updateAuth(newToken, null);
 
-
+        // 🔁 Retry original request
         final request = err.requestOptions;
         request.headers['Authorization'] = 'Bearer $newToken';
 
@@ -64,19 +85,17 @@ class AuthInterceptor extends Interceptor {
 
         final response = await dio.fetch(request);
         return handler.resolve(response);
-      } catch (_) {
+
+      } catch (e) {
         _isRefreshing = false;
         _isLoggingOut = true;
 
-        // 🔥 FULL LOCAL LOGOUT
+        // 🔥 FORCE LOGOUT
         await TokenStorage.clear();
         ref.invalidate(userProvider);
         ref.read(authControllerProvider.notifier).forceLogout();
-
       }
-
     }
-
 
     return handler.next(err);
   }

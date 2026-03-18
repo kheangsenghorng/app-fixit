@@ -11,4 +11,9 @@ class ApiEndpoints {
   static const customerProfile = '/customer/profile';
   static const customerAvatar = '/customer/avatar';
 
+  static const active = "/type/active";
+
+  static const activeCategory = "/category/active";
+
+  static const serviceActive = "/service/active";
 }
