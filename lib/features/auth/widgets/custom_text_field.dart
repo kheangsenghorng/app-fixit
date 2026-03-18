@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomTextField extends StatefulWidget {
   final String hint;
@@ -8,6 +9,10 @@ class CustomTextField extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final String? Function(String?)? validator;
 
+  final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+
+
   const CustomTextField({
     super.key,
     required this.hint,
@@ -16,6 +21,8 @@ class CustomTextField extends StatefulWidget {
     this.controller,
     this.onChanged,
     this.validator,
+    this.keyboardType,
+    this.inputFormatters,
   });
 
   @override
@@ -37,6 +44,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
         obscureText: widget.isPassword ? _obscureText : false,
         onChanged: widget.onChanged,
         validator: widget.validator,
+
+        keyboardType: widget.keyboardType,
+        inputFormatters: widget.inputFormatters,
         autovalidateMode: AutovalidateMode.onUserInteraction, // 🔥 instant validation
         style: TextStyle(
           color: colorScheme.onSurface,

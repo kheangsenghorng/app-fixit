@@ -2,9 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
-
-import '../data/auth_repository.dart';
 import '../presentation/providers/auth_controller.dart';
 import '../presentation/ui/otp/otp_screen.dart';
 import 'sign_up_form.dart';
@@ -22,13 +19,44 @@ class SignUpSheetBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authControllerProvider);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+
+    // ✅ LISTENER (same as login)
+    ref.listen(authControllerProvider, (prev, next) {
+      next.whenOrNull(
+        data: (auth) {
+          if (auth == null) return;
+
+          final phone = SignUpForm.phoneController.text;
+          final password = SignUpForm.passwordController.text;
+
+          // 🔐 OTP FLOW
+          if (auth.requestId != null) {
+            if (prev?.value?.requestId != auth.requestId) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => OtpScreen(
+                    phone: phone,
+                    password: password,
+
+                  ),
+                ),
+              );
+            }
+            return;
+          }
+        },
+        error: (err, _) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(err.toString())),
+          );
+        },
+      );
+    });
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SheetDragHandle(),
@@ -40,38 +68,17 @@ class SignUpSheetBody extends ConsumerWidget {
           const SignUpForm(),
           const SizedBox(height: 32),
 
+          // 🚀 BUTTON (CLEAN)
           SignUpSubmitButton(
             loading: auth.isLoading,
             onPressed: () async {
               final phone = SignUpForm.phoneController.text;
-              final password = SignUpForm.passwordController.text;
 
-              // 1️⃣ Register (creates inactive user)
               await ref.read(authControllerProvider.notifier).register(
                 name: SignUpForm.nameController.text,
                 phone: phone,
-                password: password,
+                password: SignUpForm.passwordController.text,
               );
-
-              final result = ref.read(authControllerProvider);
-
-              // 2️⃣ If register successful → send OTP + navigate
-              if (context.mounted && result.value == null && !result.hasError) {
-                // Send OTP
-                await ref.read(authRepositoryProvider).sendOtp(phone);
-
-                if (!context.mounted) return;
-                // Navigate to OTP screen
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => OtpScreen(
-                      phone: phone,
-                      password: password,
-                    ),
-                  ),
-                );
-              }
             },
           ),
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'custom_text_field.dart';
 
 class SignUpForm extends StatefulWidget {
@@ -25,10 +26,16 @@ class _SignUpFormState extends State<SignUpForm> {
 
         const SizedBox(height: 12),
 
+        // 📱 PHONE INPUT (ONLY NUMBERS)
         CustomTextField(
           hint: "Phone",
           icon: Icons.phone_outlined,
           controller: SignUpForm.phoneController,
+          keyboardType: TextInputType.phone,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(12), // optional
+          ],
         ),
 
         const SizedBox(height: 12),

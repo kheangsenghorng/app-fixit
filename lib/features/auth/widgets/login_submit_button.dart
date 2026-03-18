@@ -29,7 +29,7 @@ class LoginSubmitButton extends ConsumerWidget {
             borderRadius: BorderRadius.circular(16),
           ),
           // Disabled style
-          disabledBackgroundColor: colorScheme.primary.withOpacity(0.6),
+          disabledBackgroundColor: colorScheme.primary.withValues(alpha: 0.6),
         ),
         onPressed: authState.isLoading
             ? null

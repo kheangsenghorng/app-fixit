@@ -43,9 +43,8 @@ class AuthRepository {
       'password_confirmation': password,
     });
 
-    return AuthModel.fromJson(res.data);
+    return AuthModel.fromJson(res.data); // ✅ important
   }
-
   // ---------------- OTP ----------------
 
   /// Send OTP
@@ -59,17 +58,19 @@ class AuthRepository {
   }
 
   /// Verify OTP
-  Future<void> verifyOtp({
+  Future<AuthModel> verifyOtp({
     required String phone,
     required String code,
   }) async {
-    await dio.post(
+    final res = await dio.post(
       ApiEndpoints.verifyOtp,
       data: {
         'phone': phone,
         'code': code,
       },
     );
+
+    return AuthModel.fromJson(res.data);
   }
 
   // ---------------- USER ----------------
