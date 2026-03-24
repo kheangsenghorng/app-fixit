@@ -12,47 +12,34 @@ part 'auth_controller.g.dart';
 @riverpod
 class AuthController extends _$AuthController {
   @override
-  AsyncValue<AuthModel?> build() {
-    _autoLogin();
-    return const AsyncData(null);
+  FutureOr<AuthModel?> build() async {
+    return _autoLogin();
   }
 
   // ---------------- AUTO LOGIN ----------------
 
-  Future<void> _autoLogin() async {
+  Future<AuthModel?> _autoLogin() async {
     try {
       final token = await TokenStorage.get();
 
-      // ❌ No token → not logged in
-      if (token == null || token.isEmpty) {
-        state = const AsyncData(null);
-        return;
-      }
+      if (token == null || token.isEmpty) return null;
 
-      // 🔄 Optional: show loading during auto login
-      state = const AsyncLoading();
-
-      // 👤 Load user profile
       final user = await ref.read(authRepositoryProvider).me();
 
-      // ✅ Restore auth state
-      state = AsyncData(
-        AuthModel(
-          token: token,
-          user: user,
-          expiresIn: null,
-          message: null,
-          requestId: null,
-        ),
+      return AuthModel(
+        success: true,
+        token: token,
+        user: user,
+        expiresIn: null,
+        message: null,
+        requestId: null,
+        channel: null,
+        login: null,
       );
-
     } catch (e) {
       debugPrint('AUTO LOGIN FAILED: $e');
-
-      // ❌ Token invalid → clear everything
       await TokenStorage.clear();
-
-      state = const AsyncData(null);
+      return null;
     }
   }
 
@@ -63,50 +50,30 @@ class AuthController extends _$AuthController {
 
     try {
       final repo = ref.read(authRepositoryProvider);
-
       final result = await repo.login(login, password);
 
-      // ✅ OTP FLOW
-      if (result.isOtp) {
+      if (_isOtpResponse(result)) {
         state = AsyncData(result);
-
-        // 👉 UI should listen and navigate to OTP screen
         return;
       }
 
-      // ✅ DIRECT LOGIN (if backend supports)
-      if (result.isLoggedIn) {
+      if (result.isLoggedIn && result.token != null) {
         await TokenStorage.save(result.token!);
-
         state = AsyncData(result);
-
         await loadProfile();
         return;
       }
 
-      throw Exception("Invalid response");
+      throw result.message ?? 'Invalid response';
 
     } catch (e, st) {
-      String message = "Login failed";
-
-      if (e is DioException) {
-        final status = e.response?.statusCode;
-
-        if (status == 401) {
-          message = "Invalid credentials";
-        } else if (status == 403) {
-          message = "Account not verified. Please verify OTP.";
-        } else {
-          message = e.response?.data['message'] ?? e.message ?? message;
-        }
-      }
-
-      state = AsyncError(message, st);
+      state = AsyncError(_mapLoginError(e), st);
+      await Future.delayed(Duration.zero);
+      state = const AsyncData(null);
     }
   }
 
-
-  // ---------------- REGISTER (NO AUTO LOGIN) ----------------
+  // ---------------- REGISTER ----------------
 
   Future<void> register({
     required String name,
@@ -126,26 +93,21 @@ class AuthController extends _$AuthController {
         password: password,
       );
 
-      // 🔐 OTP FLOW (same as login)
-      if (result.requestId != null) {
+      if (_isOtpResponse(result)) {
         state = AsyncData(result);
         return;
       }
 
-      throw Exception("Invalid register response");
+      throw result.message ?? 'Invalid register response';
 
     } catch (e, st) {
-      String message = "Registration failed";
-
-      if (e is DioException) {
-        message = e.response?.data['message'] ?? message;
-      }
-
-      state = AsyncError(message, st);
+      state = AsyncError(_mapRegisterError(e), st);
+      await Future.delayed(Duration.zero);
+      state = const AsyncData(null);
     }
   }
 
-  // ---------------- VERIFY OTP + AUTO LOGIN ----------------
+  // ---------------- VERIFY OTP ----------------
 
   Future<void> verifyOtp({
     required String phone,
@@ -153,36 +115,36 @@ class AuthController extends _$AuthController {
     required String password,
   }) async {
     state = const AsyncLoading();
+
     try {
       final result = await ref.read(authRepositoryProvider).verifyOtp(
         phone: phone,
         code: code,
       );
 
-      if (result.token != null) {
+      if (result.token != null && result.token!.isNotEmpty) {
         await TokenStorage.save(result.token!);
         state = AsyncData(result);
         await loadProfile();
         return;
       }
 
-      // Fallback: if backend doesn't return token on verify, login manually
-      await login(phone, password);
+      throw result.message ?? 'OTP verification failed';
+
     } catch (e, st) {
-      state = AsyncError(e is DioException
-          ? e.response?.data['message'] ?? "OTP verification failed"
-          : "OTP verification failed", st);
+      state = AsyncError(_mapOtpError(e), st);
+      await Future.delayed(Duration.zero);
+      state = const AsyncData(null);
     }
   }
-  // ---------------- UPDATE AUTH (INTERCEPTOR) ----------------
+
+  // ---------------- UPDATE AUTH ----------------
 
   void updateAuth(String token, UserModel? user) {
-    final current = state.value;
-
-    if (current == null) return;
+    final current = state.valueOrNull;
 
     state = AsyncData(
-      current.copyWith(
+      (current ?? const AuthModel()).copyWith(
         token: token,
         user: user,
       ),
@@ -195,14 +157,19 @@ class AuthController extends _$AuthController {
     try {
       final repo = ref.read(authRepositoryProvider);
       final user = await repo.me();
-
       final token = await TokenStorage.get();
 
-      if (token != null) {
-        updateAuth(token, user);
+      if (token != null && token.isNotEmpty) {
+        final current = state.valueOrNull;
+
+        state = AsyncData(
+          (current ?? const AuthModel()).copyWith(
+            token: token,
+            user: user,
+          ),
+        );
       }
     } catch (e) {
-      // ❌ If profile fails → logout
       await TokenStorage.clear();
       state = const AsyncData(null);
     }
@@ -216,12 +183,79 @@ class AuthController extends _$AuthController {
     } catch (_) {}
 
     await TokenStorage.clear();
-
     state = const AsyncData(null);
   }
 
-  void forceLogout() async {
+  Future<void> forceLogout() async {
     await TokenStorage.clear();
     state = const AsyncData(null);
+  }
+
+  // ---------------- CLEAR ERROR ----------------
+
+  void clearError() {
+    state = AsyncData(state.valueOrNull);
+  }
+
+  // ---------------- HELPERS ----------------
+
+  bool _isOtpResponse(AuthModel result) {
+    final msg = result.message?.toLowerCase() ?? '';
+
+    return result.requestId != null ||
+        msg.contains('otp sent') ||
+        msg.contains('verify otp') ||
+        msg.contains('verification code') ||
+        (!result.isLoggedIn &&
+            ((result.login != null && result.login!.isNotEmpty) ||
+                (result.channel != null && result.channel!.isNotEmpty)));
+  }
+
+  String _mapLoginError(Object e) {
+    if (e is String) return e;
+
+    if (e is DioException) {
+      final status = e.response?.statusCode;
+      final data = e.response?.data;
+
+      if (status == 401) return 'Invalid credentials';
+      if (status == 403) return 'Account not verified. Please verify OTP.';
+
+      if (data is Map<String, dynamic>) {
+        return data['message']?.toString() ?? e.message ?? 'Login failed';
+      }
+
+      return e.message ?? 'Login failed';
+    }
+
+    return e.toString().replaceAll('Exception: ', '');
+  }
+
+  String _mapRegisterError(Object e) {
+    if (e is String) return e;
+
+    if (e is DioException) {
+      final data = e.response?.data;
+      if (data is Map<String, dynamic>) {
+        return data['message']?.toString() ?? 'Registration failed';
+      }
+      return e.message ?? 'Registration failed';
+    }
+
+    return e.toString().replaceAll('Exception: ', '');
+  }
+
+  String _mapOtpError(Object e) {
+    if (e is String) return e;
+
+    if (e is DioException) {
+      final data = e.response?.data;
+      if (data is Map<String, dynamic>) {
+        return data['message']?.toString() ?? 'OTP verification failed';
+      }
+      return e.message ?? 'OTP verification failed';
+    }
+
+    return e.toString().replaceAll('Exception: ', '');
   }
 }

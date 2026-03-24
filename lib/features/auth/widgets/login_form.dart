@@ -1,46 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
+import '../presentation/providers/auth_controller.dart';
 import '../presentation/providers/login_form_provider.dart';
-import 'custom_text_field.dart';
 
 class LoginForm extends ConsumerWidget {
   const LoginForm({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(loginFormProvider);
-    final formKey = ref.watch(loginFormKeyProvider); // Get the key
+    final formState = ref.watch(loginFormProvider);
+    final formKey = ref.watch(loginFormKeyProvider);
+    final notifier = ref.read(loginFormNotifierProvider);
 
     return Form(
-      key: formKey, // 🔥 VERY IMPORTANT: Connect the key to the form
+      key: formKey,
       child: Column(
         children: [
-          CustomTextField(
-            hint: "Enter your email",
-            icon: Icons.email_outlined,
-            // Validation logic
+          TextFormField(
+            initialValue: formState.login,
+            decoration: const InputDecoration(
+              labelText: 'Phone or Email',
+            ),
+            onChanged: (value) {
+              notifier.setLogin(value);
+              ref.read(authControllerProvider.notifier);
+            },
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Email is required';
+                return 'Please enter phone or email';
               }
               return null;
             },
-            onChanged: (v) => ref.read(loginFormProvider.notifier).state = form.copyWith(login: v),
           ),
-          CustomTextField(
-            hint: "Enter your password",
-            icon: Icons.lock_outline,
-            isPassword: true,
-            // Validation logic
+          const SizedBox(height: 16),
+          TextFormField(
+            initialValue: formState.password,
+            obscureText: true,
+            decoration: const InputDecoration(
+              labelText: 'Password',
+            ),
+            onChanged: (value) {
+              notifier.setPassword(value);
+              ref.read(authControllerProvider.notifier);
+            },
             validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Password is required';
+              if (value == null || value.trim().isEmpty) {
+                return 'Please enter password';
               }
               return null;
             },
-            onChanged: (v) => ref.read(loginFormProvider.notifier).state = form.copyWith(password: v),
           ),
         ],
       ),

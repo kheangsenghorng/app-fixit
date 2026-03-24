@@ -1,6 +1,11 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/models/category_model.dart';
+import '../../../core/models/type_model.dart';
+import '../../../core/provider/type_listener_provider.dart';
 import './get_service_screen/get_service_screen.dart';
 import 'data/providers/types_provider.dart';
 import 'widgets/filter_sheet.dart';
@@ -16,59 +21,56 @@ class SearchResultScreen extends ConsumerStatefulWidget {
 }
 
 class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
-  int selectedCategoryIndex = 0; // 0 is "All"
+  int selectedCategoryIndex = 0;
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    // Fetch data on load
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent - 200) {
-        ref.read(typeProvider.notifier).fetchActiveTypes(loadMore: true);
-      }
+
+    Future.microtask(() async {
+      ref.read(typeListenerProvider);
+      await ref.read(typeProvider.notifier).loadInitialTypes();
     });
 
-    Future.microtask(() {
-      ref.read(typeProvider.notifier).fetchActiveTypes();
-    });
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 200) {
+      ref.read(typeProvider.notifier).fetchActiveTypes(loadMore: true);
+    }
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     final typeState = ref.watch(typeProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // --- LOGIC: EXTRACT UNIQUE CATEGORIES ---
-    // Since the API returns "Types", and multiple types share one category,
-    // we need to filter them so "Repair" only shows once in the sidebar.
-    final List<dynamic> uniqueCategories = [];
-    final Set<int> seenCategoryIds = {};
+    final categories = _buildUniqueCategories(typeState.types);
 
-    for (var type in typeState.types) {
-      if (!seenCategoryIds.contains(type.category.id)) {
-        seenCategoryIds.add(type.category.id);
-        uniqueCategories.add(type.category);
-      }
+    if (selectedCategoryIndex > categories.length) {
+      selectedCategoryIndex = 0;
     }
 
-    // --- LOGIC: FILTER RESULTS ---
-    // If "All" (index 0) is selected, show everything.
-    // Otherwise, show only types belonging to the selected category.
-    final filteredTypes = selectedCategoryIndex == 0
-        ? typeState.types
-        : typeState.types
-        .where((t) => t.category.id == uniqueCategories[selectedCategoryIndex - 1].id)
-        .toList();
+    final filteredTypes = _filterTypesByCategory(
+      types: typeState.types,
+      categories: categories,
+      selectedCategoryIndex: selectedCategoryIndex,
+    );
 
-    // --- THEME COLORS ---
     final scaffoldBg = isDark ? Colors.black : Colors.white;
     final contentColor = isDark ? Colors.white : Colors.black;
     final glassColor = isDark
@@ -87,7 +89,6 @@ class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
             padding: const EdgeInsets.only(top: 120),
             child: Row(
               children: [
-                // --- LEFT SIDEBAR (CATEGORIES) ---
                 Container(
                   width: 90,
                   decoration: BoxDecoration(
@@ -95,28 +96,42 @@ class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
                       right: BorderSide(color: borderColor, width: 0.5),
                     ),
                   ),
-                  child: typeState.isLoading
+                  child: typeState.isLoading && typeState.types.isEmpty
                       ? const Center(child: CircularProgressIndicator())
                       : ListView.builder(
-                    itemCount: uniqueCategories.length + 1,
+                    itemCount: categories.length + 1,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     itemBuilder: (context, index) {
                       final isSelected = selectedCategoryIndex == index;
+                      final Category? category =
+                      index == 0 ? null : categories[index - 1];
 
-                      // Get Label and Icon
-                      final String label = index == 0 ? "All" : uniqueCategories[index - 1].name;
-                      final String? iconUrl = index == 0 ? null : uniqueCategories[index - 1].icon;
+                      final String label =
+                      index == 0 ? 'All' : category?.name ?? '';
+                      final String iconUrl =
+                      index == 0 ? '' : category?.icon ?? '';
 
                       return GestureDetector(
-                        onTap: () => setState(() => selectedCategoryIndex = index),
+                        onTap: () {
+                          setState(() {
+                            selectedCategoryIndex = index;
+                          });
+                        },
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
-                          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 8),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 15,
+                            horizontal: 8,
+                          ),
                           decoration: BoxDecoration(
-                            color: isSelected ? activeColor.withValues(alpha: 0.08) : Colors.transparent,
+                            color: isSelected
+                                ? activeColor.withValues(alpha: 0.08)
+                                : Colors.transparent,
                             border: Border(
                               left: BorderSide(
-                                color: isSelected ? activeColor : Colors.transparent,
+                                color: isSelected
+                                    ? activeColor
+                                    : Colors.transparent,
                                 width: 3,
                               ),
                             ),
@@ -124,18 +139,12 @@ class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              index == 0
-                                  ? Icon(Icons.grid_view_rounded,
-                                  size: 24,
-                                  color: isSelected ? activeColor : contentColor.withValues(alpha: 0.3))
-                                  : Image.network(
-                                iconUrl!,
-                                height: 24,
-                                width: 24,
-                                color: isSelected ? activeColor : contentColor.withValues(alpha: 0.3),
-                                errorBuilder: (_, __, ___) => Icon(Icons.category,
-                                    size: 24,
-                                    color: isSelected ? activeColor : contentColor.withValues(alpha: 0.3)),
+                              _buildCategoryIcon(
+                                index: index,
+                                iconUrl: iconUrl,
+                                isSelected: isSelected,
+                                activeColor: activeColor,
+                                contentColor: contentColor,
                               ),
                               const SizedBox(height: 6),
                               Text(
@@ -145,8 +154,14 @@ class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 10,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                  color: isSelected ? activeColor : contentColor.withValues(alpha: 0.4),
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? activeColor
+                                      : contentColor.withValues(
+                                    alpha: 0.4,
+                                  ),
                                 ),
                               ),
                             ],
@@ -156,45 +171,75 @@ class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
                     },
                   ),
                 ),
-
-                // --- RIGHT RESULTS AREA ---
                 Expanded(
-                  child: typeState.isLoading
+                  child: typeState.isLoading && typeState.types.isEmpty
                       ? const Center(child: CircularProgressIndicator())
                       : SingleChildScrollView(
                     controller: _scrollController,
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     child: Column(
                       children: [
-                        _buildFeaturedServiceCard(context, theme, activeColor),
+                        _buildFeaturedServiceCard(
+                          context,
+                          activeColor,
+                        ),
                         const SizedBox(height: 25),
-
-                        if (filteredTypes.isEmpty)
+                        if (typeState.error != null &&
+                            typeState.types.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 24),
+                            child: Text(
+                              typeState.error!,
+                              style: TextStyle(
+                                color:
+                                contentColor.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ),
+                        if (filteredTypes.isEmpty &&
+                            !(typeState.isLoading &&
+                                typeState.types.isEmpty))
                           Padding(
                             padding: const EdgeInsets.only(top: 40),
-                            child: Text("No services found", style: TextStyle(color: contentColor.withValues(alpha: 0.5))),
+                            child: Text(
+                              'No services found',
+                              style: TextStyle(
+                                color:
+                                contentColor.withValues(alpha: 0.5),
+                              ),
+                            ),
                           ),
+                        if (filteredTypes.isNotEmpty)
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisExtent: 250,
+                              crossAxisSpacing: 15,
+                              mainAxisSpacing: 15,
+                            ),
+                            itemCount: filteredTypes.length,
+                            itemBuilder: (context, index) {
+                              final item = filteredTypes[index];
 
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisExtent: 250,
-                            crossAxisSpacing: 15,
-                            mainAxisSpacing: 15,
+                              return ProviderCard(
+                                name: item.name,
+                                job: item.category?.name ?? '',
+                                imageUrl: item.icon,
+                              );
+                            },
                           ),
-                          itemCount: filteredTypes.length,
-                          itemBuilder: (context, index) {
-                            final item = filteredTypes[index];
-                            return ProviderCard(
-                              name: item.name, // The Type name (e.g. Electrician)
-                              job: item.category.name, // The Category name (e.g. Repair)
-                              imageUrl: item.icon,
-                            );
-                          },
-                        ),
+                        if (typeState.isLoadingMore)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 24),
+                            child: CircularProgressIndicator(),
+                          ),
                         const SizedBox(height: 100),
                       ],
                     ),
@@ -203,8 +248,6 @@ class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
               ],
             ),
           ),
-
-          // --- FLOATING GLASS HEADER ---
           Positioned(
             top: 50,
             left: 16,
@@ -225,10 +268,16 @@ class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
                     children: [
                       Expanded(
                         child: TextField(
-                          style: TextStyle(color: contentColor, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                            color: contentColor,
+                            fontWeight: FontWeight.w500,
+                          ),
                           decoration: InputDecoration(
-                            hintText: widget.query ?? "Search services...",
-                            hintStyle: TextStyle(color: contentColor.withValues(alpha: 0.3), fontSize: 15),
+                            hintText: widget.query ?? 'Search services...',
+                            hintStyle: TextStyle(
+                              color: contentColor.withValues(alpha: 0.3),
+                              fontSize: 15,
+                            ),
                             border: InputBorder.none,
                           ),
                         ),
@@ -255,7 +304,87 @@ class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
     );
   }
 
-  Widget _buildFeaturedServiceCard(BuildContext context, ThemeData theme, Color activeColor) {
+  List<Category> _buildUniqueCategories(List<TypeModel> types) {
+    final List<Category> uniqueCategories = [];
+    final Set<int> seenCategoryIds = {};
+
+    for (final type in types) {
+      final category = type.category;
+      final categoryId = category?.id;
+
+      if (category != null &&
+          categoryId != null &&
+          !seenCategoryIds.contains(categoryId)) {
+        seenCategoryIds.add(categoryId);
+        uniqueCategories.add(category);
+      }
+    }
+
+    return uniqueCategories;
+  }
+
+  List<TypeModel> _filterTypesByCategory({
+    required List<TypeModel> types,
+    required List<Category> categories,
+    required int selectedCategoryIndex,
+  }) {
+    if (selectedCategoryIndex == 0) {
+      return types;
+    }
+
+    final selectedCategory = categories[selectedCategoryIndex - 1];
+
+    return types.where((type) {
+      return type.category?.id == selectedCategory.id;
+    }).toList();
+  }
+
+  Widget _buildCategoryIcon({
+    required int index,
+    required String iconUrl,
+    required bool isSelected,
+    required Color activeColor,
+    required Color contentColor,
+  }) {
+    final iconColor = isSelected
+        ? activeColor
+        : contentColor.withValues(alpha: 0.3);
+
+    if (index == 0) {
+      return Icon(
+        Icons.grid_view_rounded,
+        size: 24,
+        color: iconColor,
+      );
+    }
+
+    if (iconUrl.isEmpty) {
+      return Icon(
+        Icons.category,
+        size: 24,
+        color: iconColor,
+      );
+    }
+
+    return Image.network(
+      iconUrl,
+      height: 24,
+      width: 24,
+      color: iconColor,
+      errorBuilder: (_, __, ___) {
+        return Icon(
+          Icons.category,
+          size: 24,
+          color: iconColor,
+        );
+      },
+    );
+  }
+
+  Widget _buildFeaturedServiceCard(
+      BuildContext context,
+      Color activeColor,
+      ) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -267,27 +396,29 @@ class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
             color: activeColor.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
-          )
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "FEATURED SERVICE",
+            'FEATURED SERVICE',
             style: TextStyle(
-                color: Colors.white70,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2),
+              color: Colors.white70,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
           ),
           const SizedBox(height: 8),
           const Text(
-            "Professional Repair",
+            'Professional Repair',
             style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold),
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 20),
           SizedBox(
@@ -300,13 +431,20 @@ class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
                 elevation: 0,
                 shape: const StadiumBorder(),
               ),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => GetServiceScreen(query: widget.query)),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => GetServiceScreen(query: widget.query),
+                  ),
+                );
+              },
+              child: const Text(
+                'Get Now',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              child: const Text("Get Now", style: TextStyle(fontWeight: FontWeight.bold)),
             ),
-          )
+          ),
         ],
       ),
     );
