@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
@@ -9,18 +10,22 @@ import '../category_repository.dart';
 import 'category_local_storage_provider.dart';
 
 final categoryNotifierProvider =
-AsyncNotifierProvider.autoDispose<CategoryNotifier, List<Category>>(
+AsyncNotifierProvider<CategoryNotifier, List<Category>>(
   CategoryNotifier.new,
 );
 
-class CategoryNotifier extends AutoDisposeAsyncNotifier<List<Category>> {
-  bool _isListening = false;
+class CategoryNotifier extends AsyncNotifier<List<Category>> {
+  static const String _channelName = 'categories';
+  static const String _eventName = 'category.changed';
+
+  Timer? _refreshDebounce;
+  bool _disposed = false;
 
   @override
   Future<List<Category>> build() async {
     ref.onDispose(() {
-      final pusher = ref.read(pusherServiceProvider);
-      unawaited(pusher.disconnect());
+      _disposed = true;
+      _refreshDebounce?.cancel();
     });
 
     await _startPusherListener();
@@ -28,9 +33,7 @@ class CategoryNotifier extends AutoDisposeAsyncNotifier<List<Category>> {
     final cached = await _loadLocalCategories();
 
     if (cached.isNotEmpty) {
-      Future.microtask(() async {
-        await _refreshFromApiSilently();
-      });
+      Future.microtask(() => _refreshFromApiSilently());
       return cached;
     }
 
@@ -62,30 +65,143 @@ class CategoryNotifier extends AutoDisposeAsyncNotifier<List<Category>> {
     try {
       final categories = await _fetchCategories(page: page);
       await _saveLocalCategories(categories);
-      state = AsyncData(categories);
-    } catch (_) {
-      // Keep cached state if API fails
-    }
+
+      if (!_disposed) {
+        state = AsyncData(categories);
+      }
+    } catch (_) {}
+  }
+
+  void _scheduleSilentRefresh() {
+    _refreshDebounce?.cancel();
+    _refreshDebounce = Timer(const Duration(milliseconds: 400), () async {
+      if (!_disposed) {
+        await _refreshFromApiSilently();
+      }
+    });
   }
 
   Future<void> _startPusherListener() async {
-    if (_isListening) return;
-    _isListening = true;
-
     final pusher = ref.read(pusherServiceProvider);
 
-    await pusher.init(
-      onEvent: (PusherEvent event) async {
+    void onEvent(PusherEvent event) {
+      if (_disposed) return;
 
-        if (event.channelName == 'categories' &&
-            (event.eventName == 'category.updated' ||
-                event.eventName == 'category.created' ||
-                event.eventName == 'category.deleted')) {
+      if (event.channelName != _channelName ||
+          event.eventName != _eventName) {
+        return;
+      }
 
-          await _refreshFromApiSilently();
+      try {
+        final rawData = event.data;
+        if (rawData == null || rawData.isEmpty) {
+          _scheduleSilentRefresh();
+          return;
         }
-      },
-    );
+
+        final decoded = jsonDecode(rawData) as Map<String, dynamic>;
+        final action = decoded['action']?.toString();
+        final categoryJson = decoded['category'] as Map<String, dynamic>?;
+
+        switch (action) {
+          case 'created':
+          case 'restored':
+            if (categoryJson != null) {
+              _syncCreatedCategory(Category.fromJson(categoryJson));
+            } else {
+              _scheduleSilentRefresh();
+            }
+            break;
+
+          case 'updated':
+            if (categoryJson != null) {
+              _syncUpdatedCategory(Category.fromJson(categoryJson));
+            } else {
+              _scheduleSilentRefresh();
+            }
+            break;
+
+          case 'deleted':
+          case 'force_deleted':
+            if (categoryJson != null) {
+              final rawId = categoryJson['id'];
+              final id = rawId is int ? rawId : int.tryParse(rawId.toString());
+
+              if (id != null) {
+                _removeCategory(id);
+              } else {
+                _scheduleSilentRefresh();
+              }
+            } else {
+              _scheduleSilentRefresh();
+            }
+            break;
+
+          default:
+            _scheduleSilentRefresh();
+        }
+      } catch (_) {
+        _scheduleSilentRefresh();
+      }
+    }
+
+    ref.onDispose(() => pusher.removeListener(onEvent));
+
+    await pusher.init(onEvent: onEvent);
+  }
+
+  bool _isActive(Category category) {
+    return category.status == 'active';
+  }
+
+  Future<void> _saveCurrentStateLocally(List<Category> categories) async {
+    state = AsyncData(categories);
+    await _saveLocalCategories(categories);
+  }
+
+  void _syncCreatedCategory(Category created) {
+    final current = state.valueOrNull;
+    if (current == null || _disposed) return;
+
+    if (!_isActive(created)) {
+      return;
+    }
+
+    final exists = current.any((c) => c.id == created.id);
+
+    final updated = exists
+        ? current.map((c) => c.id == created.id ? created : c).toList()
+        : [created, ...current];
+
+    _saveCurrentStateLocally(updated);
+  }
+
+  void _syncUpdatedCategory(Category updated) {
+    final current = state.valueOrNull;
+    if (current == null || _disposed) return;
+
+    final exists = current.any((c) => c.id == updated.id);
+    final isActive = _isActive(updated);
+
+    List<Category> next;
+
+    if (isActive) {
+      next = exists
+          ? current.map((c) => c.id == updated.id ? updated : c).toList()
+          : [updated, ...current];
+    } else {
+      next = current.where((c) => c.id != updated.id).toList();
+    }
+
+    _saveCurrentStateLocally(next);
+  }
+
+  void _removeCategory(int id) {
+    final current = state.valueOrNull;
+    if (current == null || _disposed) return;
+
+    final updated = current.where((c) => c.id != id).toList();
+    _saveCurrentStateLocally(updated);
   }
 
   Future<void> refreshCategories({int page = 1}) async {

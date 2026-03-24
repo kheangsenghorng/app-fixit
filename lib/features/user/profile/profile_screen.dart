@@ -113,13 +113,16 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   Widget _buildBody(
-    AsyncValue auth,
-    AsyncValue userAsync,
-    AppLocalizations l10n,
-    ThemeData theme,
-    Color contentColor,
-    BuildContext context,
-  ) {
+      AsyncValue auth,
+      AsyncValue userAsync,
+      AppLocalizations l10n,
+      ThemeData theme,
+      Color contentColor,
+      BuildContext context,
+      ) {
+    // ✅ Handle auth error state explicitly — avoids the crash
+    if (auth.hasError) return const SizedBox();
+
     if (auth.isLoading && auth.value == null) return const GeneralLoadingView();
     if (auth.value == null) return const SizedBox();
 
@@ -139,7 +142,7 @@ class ProfileScreen extends ConsumerWidget {
 
     return ProfileBodyView(
       user: user!,
-      headerTextColor: contentColor, // Pass Black or White to the body
+      headerTextColor: contentColor,
       isLoading: isProcessing,
       onJoinProvider: () {
         showModalBottomSheet(

@@ -3,52 +3,60 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/auth_controller.dart';
 import '../providers/login_form_provider.dart';
+import '../../data/models/auth_model.dart';
 
-void listenLogin(BuildContext context, WidgetRef ref) {
-  ref.listen(authControllerProvider, (prev, next) {
-    next.whenOrNull(
-      data: (auth) {
-        if (auth == null) return;
+ProviderSubscription<AsyncValue<AuthModel?>> listenLogin(
+    BuildContext context,
+    WidgetRef ref,
+    ) {
+  return ref.listenManual<AsyncValue<AuthModel?>>(
+    authControllerProvider,
+        (prev, next) {
+      next.whenOrNull(
+        data: (auth) {
+          if (auth == null) return;
 
-        final form = ref.read(loginFormProvider);
+          final form = ref.read(loginFormProvider);
 
-        // 🔐 OTP FLOW (NEW)
-        if (auth.requestId != null) {
-          //  duplicate navigation
-          if (prev?.value?.requestId != auth.requestId) {
-            Navigator.pushReplacementNamed(
+          // OTP FLOW
+          if (auth.isOtp) {
+            final previousWasSameOtp =
+                prev?.valueOrNull?.message == auth.message &&
+                    prev?.valueOrNull?.login == auth.login;
+
+            if (!previousWasSameOtp) {
+              Navigator.pushReplacementNamed(
+                context,
+                '/otp',
+                arguments: {
+                  'phone': auth.login ?? form.login,
+                  'password': form.password,
+                  'request_id': auth.requestId,
+                  'channel': auth.channel,
+                  'message': auth.message,
+                },
+              );
+            }
+            return;
+          }
+
+          // LOGIN SUCCESS
+          if (auth.isLoggedIn) {
+            Navigator.pushNamedAndRemoveUntil(
               context,
-              '/otp',
-              arguments: {
-                'phone': form.login,
-                'password': form.password,
-                'request_id': auth.requestId,
-              },
+              '/main',
+                  (route) => false,
             );
           }
-          return;
-        }
+        },
+        error: (err, _) {
+          final msg = err.toString().replaceAll('Exception: ', '');
 
-        // ✅ LOGIN SUCCESS
-        if (auth.token?.isNotEmpty == true) {
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/main',
-                (route) => false,
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(msg)),
           );
-          return;
-        }
-      },
-
-      error: (err, _) {
-        final msg = err.toString();
-
-        // ❌ No more sendOtp here
-        // Only show error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg.replaceAll('Exception: ', ''))),
-        );
-      },
-    );
-  });
+        },
+      );
+    },
+  );
 }

@@ -34,7 +34,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   void _handleNavTap(int index, {bool pop = false}) {
     final requiresLogin = index == 2 || index == 4;
 
-    final authState = ref.watch(authControllerProvider);
+    // ✅ ref.read is correct inside callbacks/methods
+    final authState = ref.read(authControllerProvider);
 
     final isLoggedIn = authState.maybeWhen(
       data: (auth) => auth?.token?.isNotEmpty == true,
@@ -69,7 +70,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   Widget build(BuildContext context) {
     // 🔥 Listen for logout → go Home
     ref.listen(authControllerProvider, (prev, next) {
-      if (prev?.value != null && next.value == null) {
+      // ✅ valueOrNull never throws — returns null on error or loading
+      if (prev?.valueOrNull != null && next.valueOrNull == null && !next.hasError) {
         setState(() => _selectedIndex = 0);
       }
     });
