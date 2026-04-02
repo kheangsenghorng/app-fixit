@@ -11,7 +11,6 @@ class HomeBody extends StatelessWidget {
   final int currentIndex;
   final VoidCallback onSearchTap;
   final VoidCallback onClear;
-  final VoidCallback onPopularServicesTap;
   final Function(int)? onNavTap;
 
   const HomeBody({
@@ -23,7 +22,6 @@ class HomeBody extends StatelessWidget {
     required this.currentIndex,
     required this.onSearchTap,
     required this.onClear,
-    required this.onPopularServicesTap,
     this.onNavTap,
   });
 
@@ -46,7 +44,7 @@ class HomeBody extends StatelessWidget {
               currentIndex: currentIndex,
               onSearchTap: onSearchTap,
               onClear: onClear,
-              onPopularServicesTap: onPopularServicesTap,
+              onPopularServicesTap: () => onNavTap?.call(1),
               onNavTap: onNavTap,
             ),
 

@@ -3,13 +3,11 @@ import 'package:fixit/features/user/home/widgets/home_body.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
-  final VoidCallback onPopularServicesTap;
   final int currentIndex;
   final Function(int)? onNavTap;
 
   const HomeScreen({
     super.key,
-    required this.onPopularServicesTap,
     required this.currentIndex,
     this.onNavTap,
   });
@@ -83,7 +81,6 @@ class _HomeScreenState extends State<HomeScreen> {
             currentIndex: widget.currentIndex,
             onSearchTap: _onSearchTap,
             onClear: _onClear,
-            onPopularServicesTap: widget.onPopularServicesTap,
             onNavTap: widget.onNavTap,
           ),
 

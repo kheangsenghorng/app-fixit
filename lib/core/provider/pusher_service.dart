@@ -1,6 +1,8 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
 
+import '../constants/pusher_constants.dart';
+
 class PusherService {
   final PusherChannelsFlutter _pusher = PusherChannelsFlutter.getInstance();
   bool _initialized = false;
@@ -31,8 +33,9 @@ class PusherService {
       onError: (message, code, error) {},
     );
 
-    await _pusher.subscribe(channelName: 'categories');
-    await _pusher.subscribe(channelName: 'types');
+    await _pusher.subscribe(channelName: PusherChannels.categories);
+    await _pusher.subscribe(channelName: PusherChannels.types);
+    await _pusher.subscribe(channelName: PusherChannels.services);
     await _pusher.connect();
 
     _initialized = true;

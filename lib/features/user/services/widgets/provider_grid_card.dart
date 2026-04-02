@@ -34,7 +34,6 @@ class ProviderGridCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // IMAGE
           Padding(
             padding: const EdgeInsets.all(8),
             child: AspectRatio(
@@ -52,7 +51,6 @@ class ProviderGridCard extends StatelessWidget {
             ),
           ),
 
-          // NAME
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(
@@ -65,7 +63,6 @@ class ProviderGridCard extends StatelessWidget {
             ),
           ),
 
-          // CATEGORY
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
             child: Text(
@@ -76,7 +73,6 @@ class ProviderGridCard extends StatelessWidget {
             ),
           ),
 
-          // RATING + DETAILS BUTTON
           Padding(
             padding: const EdgeInsets.all(10),
             child: Row(
@@ -99,8 +95,6 @@ class ProviderGridCard extends StatelessWidget {
                     ),
                   ],
                 ),
-
-                // DETAILS BUTTON
                 InkWell(
                   borderRadius: BorderRadius.circular(6),
                   onTap: () {
@@ -139,28 +133,42 @@ class ProviderGridCard extends StatelessWidget {
     );
   }
 
-  // IMAGE BUILDER
   Widget _buildImage() {
-    if (provider.imageUrl == null || provider.imageUrl!.isEmpty) {
-      return const Center(
-        child: Icon(
-          Icons.person,
-          size: 60,
-          color: Colors.white70,
-        ),
+    final imageUrl = provider.imageUrl;
+
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return _buildFallback();
+    }
+
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.contain,
+        alignment: Alignment.bottomCenter,
+        errorBuilder: (context, error, stackTrace) => _buildFallback(),
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return const Center(
+            child: CircularProgressIndicator(strokeWidth: 2),
+          );
+        },
       );
     }
 
     return Image.asset(
-      provider.imageUrl!,
+      imageUrl,
       fit: BoxFit.contain,
       alignment: Alignment.bottomCenter,
-      errorBuilder: (context, error, stackTrace) => const Center(
-        child: Icon(
-          Icons.person,
-          size: 60,
-          color: Colors.white70,
-        ),
+      errorBuilder: (context, error, stackTrace) => _buildFallback(),
+    );
+  }
+
+  Widget _buildFallback() {
+    return const Center(
+      child: Icon(
+        Icons.person,
+        size: 60,
+        color: Colors.white70,
       ),
     );
   }

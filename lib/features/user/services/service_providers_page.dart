@@ -151,6 +151,7 @@ class ServiceProvidersPage extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (_) => ProvidersPage(
                         serviceName: title,
+                        categoryId: 1,
                         currentIndex: currentIndex,
                         onNavTap: onNavTap,
                       ),

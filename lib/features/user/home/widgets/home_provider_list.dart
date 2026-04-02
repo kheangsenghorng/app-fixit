@@ -1,56 +1,65 @@
 import 'package:flutter/material.dart';
-import 'provider_card.dart'; // Ensure this is the Radius 32 version we built
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomeProviderList extends StatelessWidget {
+import '../data/provider/service_provider.dart';
+import 'provider_card.dart';
+
+class HomeProviderList extends ConsumerWidget {
   const HomeProviderList({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      // 1. INCREASED HEIGHT for the new Radius 32 cards
-      height: 260, 
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(), // Premium smooth scrolling
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        children: [
-          _providerItem(
-            "Maskot Kota",
-            "Plumber",
-            "assets/images/providers/img.png",
-          ),
-          _providerItem(
-            "Shams Jan",
-            "Electrician",
-            "assets/images/providers/img.png",
-          ),
-          _providerItem(
-            "Lucas Scott",
-            "Painter",
-            "assets/images/providers/img.png",
-          ),
-          _providerItem(
-            "Jackson",
-            "Mechanic",
-            "assets/images/providers/img.png",
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context, WidgetRef ref) {
+    final servicesAsync = ref.watch(serviceNotifierProvider);
 
-  Widget _providerItem(String name, String job, String image) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 16), // Balanced spacing
-      child: SizedBox(
-        width: 185, // Fixed width for horizontal consistency
-        child: ProviderCard(
-          name: name,
-          job: job,
-          imagePath: image,
-          // Note: bgColor is removed to keep the Pure Black/White theme
+    return servicesAsync.when(
+      loading: () => const SizedBox(
+        height: 260,
+        child: Center(
+          child: CircularProgressIndicator(),
         ),
       ),
+      error: (error, stackTrace) => SizedBox(
+        height: 260,
+        child: Center(
+          child: Text('Error: $error'),
+        ),
+      ),
+      data: (services) {
+        if (services.isEmpty) {
+          return const SizedBox(
+            height: 260,
+            child: Center(
+              child: Text('No services found'),
+            ),
+          );
+        }
+
+        return SizedBox(
+          height: 260,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: services.length,
+            itemBuilder: (context, index) {
+              final service = services[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: SizedBox(
+                  width: 185,
+                  child: ProviderCard(
+                    name: service.title,
+                    job: service.category.name,
+                    imagePath: service.images.isNotEmpty
+                        ? service.images.first.url
+                        : 'assets/images/providers/img.png',
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
