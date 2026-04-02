@@ -85,9 +85,9 @@ class HomeCategoryList extends ConsumerWidget {
         final item = categories[index];
 
         return CategoryCard(
-          title: item.name ?? '',
+          title: item.name,
           image: item.icon,
-          icon: (item.icon == null || item.icon!.isEmpty)
+          icon: (item.icon.isEmpty)
               ? Icons.category
               : null,
           onTap: () {
@@ -95,7 +95,8 @@ class HomeCategoryList extends ConsumerWidget {
               context,
               MaterialPageRoute(
                 builder: (_) => ProvidersPage(
-                  serviceName: item.name ?? '',
+                  serviceName: item.name,
+                  categoryId:item.id,
                   currentIndex: currentIndex,
                 ),
               ),

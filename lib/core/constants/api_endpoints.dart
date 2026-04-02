@@ -15,5 +15,9 @@ class ApiEndpoints {
 
   static const activeCategory = "/category/active";
 
-  static const serviceActive = "/service/active";
+  static const activeServices = "/service/active";
+
+  static String activeByCategory(int categoryId) {
+    return "/type/active?category_id=$categoryId";
+  }
 }

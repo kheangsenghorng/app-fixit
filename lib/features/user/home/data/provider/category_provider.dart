@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
 
+import '../../../../../core/constants/pusher_constants.dart';
 import '../../../../../core/models/category_model.dart';
 import '../../../../../core/provider/pusher_provider.dart';
 import '../category_repository.dart';
@@ -15,8 +16,8 @@ AsyncNotifierProvider<CategoryNotifier, List<Category>>(
 );
 
 class CategoryNotifier extends AsyncNotifier<List<Category>> {
-  static const String _channelName = 'categories';
-  static const String _eventName = 'category.changed';
+  static const String _channelName = PusherChannels.categories;
+  static const String _eventName = PusherEvents.categoryChanged;
 
   Timer? _refreshDebounce;
   bool _disposed = false;
@@ -104,8 +105,8 @@ class CategoryNotifier extends AsyncNotifier<List<Category>> {
         final categoryJson = decoded['category'] as Map<String, dynamic>?;
 
         switch (action) {
-          case 'created':
-          case 'restored':
+          case PusherActions.created:
+          case  PusherActions.restored:
             if (categoryJson != null) {
               _syncCreatedCategory(Category.fromJson(categoryJson));
             } else {
@@ -113,7 +114,7 @@ class CategoryNotifier extends AsyncNotifier<List<Category>> {
             }
             break;
 
-          case 'updated':
+          case PusherActions.updated:
             if (categoryJson != null) {
               _syncUpdatedCategory(Category.fromJson(categoryJson));
             } else {
@@ -121,8 +122,8 @@ class CategoryNotifier extends AsyncNotifier<List<Category>> {
             }
             break;
 
-          case 'deleted':
-          case 'force_deleted':
+          case PusherActions.deleted:
+          case PusherActions.forceDeleted:
             if (categoryJson != null) {
               final rawId = categoryJson['id'];
               final id = rawId is int ? rawId : int.tryParse(rawId.toString());

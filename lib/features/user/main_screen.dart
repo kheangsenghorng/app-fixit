@@ -5,7 +5,6 @@ import 'package:fixit/features/user/orders/my_orders_screen.dart';
 import 'package:fixit/features/user/profile/profile_screen.dart';
 import 'package:fixit/features/user/profile/settings/settings_screen.dart';
 import 'package:fixit/features/user/search/search_result_screen.dart';
-import 'package:fixit/features/user/services/popular/popular_services_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -54,17 +53,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     }
   }
 
-  void _openPopularServices() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PopularServicesPage(
-          currentIndex: _selectedIndex,
-          onNavTap: (index) => _handleNavTap(index, pop: true),
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +68,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
     final screens = [
       HomeScreen(
-        onPopularServicesTap: _openPopularServices,
         currentIndex: _selectedIndex,
         onNavTap: (index) => _handleNavTap(index),
       ),
