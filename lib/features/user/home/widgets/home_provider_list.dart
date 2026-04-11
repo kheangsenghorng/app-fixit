@@ -43,16 +43,13 @@ class HomeProviderList extends ConsumerWidget {
             itemCount: services.length,
             itemBuilder: (context, index) {
               final service = services[index];
+
               return Padding(
                 padding: const EdgeInsets.only(right: 16),
                 child: SizedBox(
                   width: 185,
                   child: ProviderCard(
-                    name: service.title,
-                    job: service.category.name,
-                    imagePath: service.images.isNotEmpty
-                        ? service.images.first.url
-                        : 'assets/images/providers/img.png',
+                    service: service,
                   ),
                 ),
               );

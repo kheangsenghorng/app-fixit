@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'home_category_list.dart';
 import 'home_promo_section.dart';
 import 'home_provider_section.dart';
@@ -44,7 +45,6 @@ class HomeBody extends StatelessWidget {
               currentIndex: currentIndex,
               onSearchTap: onSearchTap,
               onClear: onClear,
-              onPopularServicesTap: () => onNavTap?.call(1),
               onNavTap: onNavTap,
             ),
 

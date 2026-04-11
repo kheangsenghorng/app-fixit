@@ -12,8 +12,19 @@ void scheduleBookingSheet(
     ) {
   final theme = Theme.of(context);
 
-  String selectedTime = ''; // start empty
   DateTime selectedDate = DateTime.now();
+  String selectedTime = '';
+
+  const availableTimes = [
+    "08:30 AM",
+    "09:00 AM",
+    "10:00 AM",
+    "11:00 AM",
+    "12:00 PM",
+    "14:00 PM",
+    "16:00 PM",
+  ];
+
 
   showModalBottomSheet(
     context: context,
@@ -36,7 +47,6 @@ void scheduleBookingSheet(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const BookingHeader(),
-
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -45,41 +55,47 @@ void scheduleBookingSheet(
                         const Text(
                           "Select Date",
                           style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                         const SizedBox(height: 15),
-
                         CalendarCard(
                           selectedDate: selectedDate,
                           onDateSelected: (newDate) {
                             setModalState(() {
-                              selectedDate = newDate;
-                              selectedTime = ''; // reset invalid time
+                              selectedDate = DateTime(
+                                newDate.year,
+                                newDate.month,
+                                newDate.day,
+                              );
+                              selectedTime = '';
                             });
                           },
                         ),
-
                         const SizedBox(height: 25),
-
+                        Text(
+                          "Selected: ${DateFormat('yyyy-MM-dd').format(selectedDate)}",
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.blue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
                         const Text(
                           "Select Time",
                           style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                         const SizedBox(height: 10),
-
                         TimeGrid(
                           label: "Available Times",
-                          times: const [
-                            "09:00",
-                            "10:00",
-                            "11:00",
-                            "12:00",
-                            "14:00",
-                            "16:00",
-                          ],
+                          times: availableTimes,
                           selectedTime: selectedTime,
-                          selectedDate: selectedDate, // ✅ ALWAYS PASS DATE
+                          selectedDate: selectedDate,
                           onSelect: (time) {
                             setModalState(() {
                               selectedTime = time;
@@ -90,22 +106,25 @@ void scheduleBookingSheet(
                     ),
                   ),
                 ),
-
                 BookingButton(
                   onPressed: selectedTime.isEmpty
                       ? null
                       : () {
                     Navigator.pop(context);
 
+                    final images = providerData['images'];
+                    final image = (images is List && images.isNotEmpty)
+                        ? images.first.toString()
+                        : 'assets/images/providers/img.png';
+
                     showAddressSheet(
                       context,
-                      name: providerData['name'] ??
-                          "Emily Jani",
-                      image: providerData['image'] ??
-                          'assets/images/providers/img.png',
-                      selectedDate: DateFormat(
-                          'MMMM dd, yyyy')
-                          .format(selectedDate),
+                      providerData: providerData,
+                      id:providerData['id'],
+                      name: providerData['title']?.toString() ?? "Service",
+                      image: image,
+                      selectedDate:
+                      DateFormat('MMMM dd, yyyy').format(selectedDate),
                       selectedTime: selectedTime,
                     );
                   },

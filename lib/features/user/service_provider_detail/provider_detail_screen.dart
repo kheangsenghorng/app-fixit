@@ -1,41 +1,57 @@
+import 'package:fixit/features/user/service_provider_detail/widgets/provider_detail_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fixit/features/user/service_provider_detail/widgets/floating_booking_button.dart';
-import 'package:fixit/features/user/service_provider_detail/widgets/provider_detail_body_view.dart';
-import './model/provider_model.dart';
+import 'data/service/service_by_id_provider.dart';
 
+import 'widgets/provider_detail_content_view.dart';
 
-
-class ProviderDetailScreen extends StatelessWidget {
+class ProviderDetailScreen extends ConsumerWidget {
   const ProviderDetailScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // 1. Get arguments and parse through the Model
+  Widget build(BuildContext context, WidgetRef ref) {
     final args = ModalRoute.of(context)?.settings.arguments;
-    final provider = ProviderModel.fromArguments(args);
+
+    if (args is! int) {
+      return const Scaffold(body: Center(child: Text('Invalid service id')));
+    }
+
+    final int serviceId = args;
+    final serviceAsync = ref.watch(serviceByIdProvider(serviceId));
 
     final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      body: Stack(
-        children: [
-          // 2. Pass clean data from the model to the BodyView
-          ProviderDetailBodyView(
-            name: provider.name,
-            category: provider.category,
-            imageUrl: provider.imageUrl,
-            rating: provider.rating,
-          ),
-
-          // 3. Use the rawData map from the model for the booking button
-          Positioned(
-            bottom: 24,
-            left: 24,
-            right: 24,
-            child: FloatingBookingButton(providerData: provider.rawData),
-          ),
-        ],
+      body: serviceAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) => Center(child: Text('Error: $error')),
+        data: (service) {
+          // 'service' here refers to the 'data' object in your JSON
+          return Stack(
+            children: [
+              CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  ProviderDetailAppBar(
+                    name: service.title,
+                    images: service.images, // Pass the list directly
+                  ),
+                  ProviderDetailContentView(service: service),
+                ],
+              ),
+              Positioned(
+                bottom: 24,
+                left: 24,
+                right: 24,
+                child: FloatingBookingButton(
+                  providerData: service.toJson(),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 class TimeGrid extends StatelessWidget {
   final String label;
-  final List<String> times;           // e.g. ["09:00", "10:00", "11:00"]
-  final String selectedTime;           // currently selected time
-  final DateTime selectedDate;         // selected booking date
+  final List<String> times;
+  final String selectedTime;
+  final DateTime selectedDate;
   final ValueChanged<String> onSelect;
 
   const TimeGrid({
@@ -16,35 +16,46 @@ class TimeGrid extends StatelessWidget {
     required this.onSelect,
   });
 
-  bool _isPastTime(String time) {
+  bool _isPastTime(String time, DateTime selectedDate) {
     final now = DateTime.now();
-    final today = DateUtils.dateOnly(now);
-    final selectedDay = DateUtils.dateOnly(selectedDate);
+    final today = DateTime(now.year, now.month, now.day);
+    final pickedDay = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+    );
 
-    // If selected day is before today → disable all
-    if (selectedDay.isBefore(today)) {
+    // // debug
+    // debugPrint('NOW: $now');
+    // debugPrint('SELECTED DATE: $selectedDate');
+    // debugPrint('TODAY ONLY: $today');
+    // debugPrint('PICKED DAY ONLY: $pickedDay');
+    // debugPrint('CHECK TIME: $time');
+
+    // old date => disable all
+    if (pickedDay.isBefore(today)) {
       return true;
     }
 
-    // If selected day is after today → enable all
-    if (selectedDay.isAfter(today)) {
+    // future date => enable all
+    if (pickedDay.isAfter(today)) {
       return false;
     }
 
-    // Selected day IS today → compare time
+    // only today => compare hour/minute
     final parts = time.split(':');
-    final hour = int.parse(parts[0]);
-    final minute = int.parse(parts[1]);
+    final hour = int.tryParse(parts[0]) ?? 0;
+    final minute = int.tryParse(parts[1]) ?? 0;
 
-    final timeAsDate = DateTime(
-      now.year,
-      now.month,
-      now.day,
+    final slotDateTime = DateTime(
+      pickedDay.year,
+      pickedDay.month,
+      pickedDay.day,
       hour,
       minute,
     );
 
-    return timeAsDate.isBefore(now);
+    return !slotDateTime.isAfter(now);
   }
 
   @override
@@ -62,7 +73,7 @@ class TimeGrid extends StatelessWidget {
           runSpacing: 10,
           children: times.map((time) {
             final isSelected = time == selectedTime;
-            final isDisabled = _isPastTime(time);
+            final isDisabled = _isPastTime(time, selectedDate);
 
             return GestureDetector(
               onTap: isDisabled ? null : () => onSelect(time),
@@ -77,9 +88,7 @@ class TimeGrid extends StatelessWidget {
                         : theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: isSelected
-                          ? primary
-                          : Colors.grey.shade300,
+                      color: isSelected ? primary : Colors.grey.shade300,
                     ),
                   ),
                   child: Center(

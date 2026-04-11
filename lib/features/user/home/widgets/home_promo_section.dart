@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/service_providers_page.dart';
 import 'promo_banner.dart';
 
 class HomePromoSection extends StatelessWidget {
@@ -9,7 +10,7 @@ class HomePromoSection extends StatelessWidget {
   final int currentIndex;
   final VoidCallback onSearchTap;
   final VoidCallback onClear;
-  final VoidCallback onPopularServicesTap;
+
   final Function(int)? onNavTap;
 
   const HomePromoSection({
@@ -21,7 +22,7 @@ class HomePromoSection extends StatelessWidget {
     required this.currentIndex,
     required this.onSearchTap,
     required this.onClear,
-    required this.onPopularServicesTap,
+
     this.onNavTap,
   });
 
@@ -50,27 +51,41 @@ class HomePromoSection extends StatelessWidget {
           const SizedBox(height: 55),
 
           // SECTION HEADER (MONOCHROME & W900)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Category Services",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900, // Matches Profile Name
-                  color: contentColor,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              TextButton(
-                onPressed: onPopularServicesTap,
-                child: const Text(
-                  "View all",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "Category Services",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: contentColor,
+              letterSpacing: -0.5,
+            ),
           ),
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ServiceProvidersPage(
+                    currentIndex: currentIndex,
+                    onNavTap: (index) {
+                      Navigator.pop(context); // go back first
+                      onNavTap?.call(index);        // then switch tab
+                    },
+                  ),
+                ),
+              );
+            },
+            child: const Text(
+              "View all",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+
         ],
       ),
     );

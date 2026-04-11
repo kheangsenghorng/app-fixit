@@ -11,7 +11,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fixit/widgets/main_bottom_nav.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
-  const MainScreen({super.key});
+  final int currentIndex;
+  const MainScreen({super.key, required this.currentIndex});
 
   @override
   ConsumerState<MainScreen> createState() => _MainScreenState();
@@ -19,6 +20,12 @@ class MainScreen extends ConsumerStatefulWidget {
 
 class _MainScreenState extends ConsumerState<MainScreen> {
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.currentIndex; // ← add this
+  }
 
   // Login sheet
   void _showLoginSheet() {
