@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../controller/calendar_controller.dart';
+import '../data/controller/calendar_controller.dart';
 import 'calendar_body_view.dart';
 
 class CalendarCard extends StatefulWidget {
@@ -22,8 +22,36 @@ class _CalendarCardState extends State<CalendarCard> {
   @override
   void initState() {
     super.initState();
-    // Initialize the controller with the selected date
-    _controller = CalendarController(selectedDate: widget.selectedDate);
+    _controller = CalendarController(
+      selectedDate: DateTime(
+        widget.selectedDate.year,
+        widget.selectedDate.month,
+        widget.selectedDate.day,
+      ),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant CalendarCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    final oldDate = DateTime(
+      oldWidget.selectedDate.year,
+      oldWidget.selectedDate.month,
+      oldWidget.selectedDate.day,
+    );
+
+    final newDate = DateTime(
+      widget.selectedDate.year,
+      widget.selectedDate.month,
+      widget.selectedDate.day,
+    );
+
+    if (oldDate != newDate) {
+      _controller.selectedDate = newDate;
+      _controller.viewDate = DateTime(newDate.year, newDate.month, 1);
+      _controller.notifyListeners();
+    }
   }
 
   @override
@@ -34,18 +62,18 @@ class _CalendarCardState extends State<CalendarCard> {
 
   @override
   Widget build(BuildContext context) {
-
-    // Use ListenableBuilder to rebuild only the calendar when the controller changes
-    return// Inside your parent widget's build method
-      ListenableBuilder(
-        listenable: _controller,
-        builder: (context, _) {
-          return CalendarBodyView(
-            controller: _controller,
-            onDateSelected: (newDate) {
-            },
-          );
-        },
-      );
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        return CalendarBodyView(
+          controller: _controller,
+          onDateSelected: (newDate) {
+            widget.onDateSelected(
+              DateTime(newDate.year, newDate.month, newDate.day),
+            );
+          },
+        );
+      },
+    );
   }
 }

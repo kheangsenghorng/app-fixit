@@ -12,6 +12,7 @@ class AppRoutes {
   static const String popularServices = '/popular-services';
 
   static const String serviceProviders = '/service-providers';
+  static const String serviceCard = '/service-card';
   static const String providerDetail = '/provider-detail';
 
   static const String addService = '/add-service';

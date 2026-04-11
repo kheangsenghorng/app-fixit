@@ -14,6 +14,7 @@ import '../features/user/profile/edit/edit_profile_screen.dart';
 import '../features/user/profile/help_support/help_support_screen.dart';
 import '../features/user/review_summary/review_summary_screen.dart';
 import '../features/user/service_provider_detail/provider_detail_screen.dart';
+import '../features/user/services/service/service_card.dart';
 import '../unsupported_screen.dart';
 import 'app_routes.dart';
 
@@ -39,7 +40,7 @@ class RouteGenerator {
       case AppRoutes.addService:
       case AppRoutes.myOrders:
       case AppRoutes.profile:
-        return buildRoute(const MainScreen());
+        return buildRoute(const MainScreen(currentIndex: 0,));
 
     // 👤 Profile & Settings
       case AppRoutes.editProfile: return buildRoute(const EditProfileScreen());
@@ -50,7 +51,16 @@ class RouteGenerator {
       case AppRoutes.providerDetail: return buildRoute(const ProviderDetailScreen());
       case AppRoutes.reviewSummary: return buildRoute(const ReviewSummaryScreen());
       case AppRoutes.orderDetails: return buildRoute(const OrderDetailsScreen());
+      case AppRoutes.serviceCard:
+        final args = settings.arguments as Map<String, dynamic>;
 
+        return buildRoute(
+          ServiceCard(
+            nameType: args['nameType'] as String? ?? '',
+            typeId: args['typeId'] as int,
+            currentIndex: args['currentIndex'] as int? ?? 0,
+          ),
+        );
     // 💳 Payments
       case AppRoutes.payment: return buildRoute(const PaymentScreen());
 

@@ -75,7 +75,7 @@ class _ProvidersPageState extends ConsumerState<ProvidersPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          '${widget.serviceName} Providers',
+          widget.serviceName,
           style: theme.textTheme.headlineMedium,
         ),
         actions: [

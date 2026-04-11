@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:fixit/core/models/service_model.dart';
 import '../../../../routes/app_routes.dart';
 
 class ProviderCard extends StatelessWidget {
-  final String name;
-  final String job;
-  final String? imagePath;
+  final Service service;
   final VoidCallback? onTap;
 
   const ProviderCard({
     super.key,
-    required this.name,
-    required this.job,
-    this.imagePath,
+    required this.service,
     this.onTap,
   });
 
@@ -24,12 +21,7 @@ class ProviderCard extends StatelessWidget {
     Navigator.pushNamed(
       context,
       AppRoutes.providerDetail,
-      arguments: {
-        'name': name,
-        'category': job,
-        'image': imagePath,
-        'rating': "4.8",
-      },
+      arguments: service.id,
     );
   }
 
@@ -48,6 +40,11 @@ class ProviderCard extends StatelessWidget {
     final borderColor = isDark
         ? Colors.white.withValues(alpha: 0.1)
         : Colors.black.withValues(alpha: 0.05);
+
+    final String name = service.title;
+    final String job = service.category.name;
+    final String? imagePath =
+    service.images.isNotEmpty ? service.images.first.url : null;
 
     return GestureDetector(
       onTap: () => _navigateToDetail(context),
@@ -77,10 +74,10 @@ class ProviderCard extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
-                  child: imagePath != null && imagePath!.isNotEmpty
-                      ? _isNetworkImage(imagePath!)
+                  child: imagePath != null && imagePath.isNotEmpty
+                      ? _isNetworkImage(imagePath)
                       ? Image.network(
-                    imagePath!,
+                    imagePath,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Icon(
@@ -91,7 +88,7 @@ class ProviderCard extends StatelessWidget {
                     },
                   )
                       : Image.asset(
-                    imagePath!,
+                    imagePath,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Icon(

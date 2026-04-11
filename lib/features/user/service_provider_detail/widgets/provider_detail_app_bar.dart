@@ -1,17 +1,19 @@
+import 'package:fixit/features/user/service_provider_detail/widgets/service_image_carousel.dart';
 import 'package:flutter/material.dart';
 import 'package:fixit/features/user/service_provider_detail/widgets/provider_appbar_actions.dart';
 import 'package:fixit/features/user/service_provider_detail/widgets/provider_flexible_space.dart';
-import 'package:fixit/features/user/service_provider_detail/widgets/provider_header.dart';
+
 
 class ProviderDetailAppBar extends StatelessWidget {
   final String name;
-  final String imageUrl;
+  final List<dynamic> images;
 
   const ProviderDetailAppBar({
     super.key,
     required this.name,
-    required this.imageUrl,
+    required this.images,
   });
+
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +31,11 @@ class ProviderDetailAppBar extends StatelessWidget {
         child: CircleAvatar(
           backgroundColor: Colors.white.withValues(alpha: 0.9),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 16, color: Colors.black),
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              size: 16,
+              color: Colors.black,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -43,7 +49,7 @@ class ProviderDetailAppBar extends StatelessWidget {
       flexibleSpace: ProviderFlexibleSpace(
         title: name,
         stretchModes: const [StretchMode.zoomBackground],
-        background: ProviderHeader(imageUrl: imageUrl),
+        background: ServiceImageCarousel(images: images),
       ),
     );
   }

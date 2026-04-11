@@ -5,4 +5,6 @@ class LocalStorageKeys {
   static String cachedActiveTypesByCategory(int categoryId) {
     return 'cached_active_types_$categoryId';
   }
+
+
 }

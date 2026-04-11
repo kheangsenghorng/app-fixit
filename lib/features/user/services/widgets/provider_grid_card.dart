@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:fixit/routes/app_routes.dart';
-
+import '../../service_provider_detail/provider_detail_screen.dart';
 import '../providers/providers_page.dart';
+
 
 class ProviderGridCard extends StatelessWidget {
   final ProviderModel provider;
@@ -98,14 +98,13 @@ class ProviderGridCard extends StatelessWidget {
                 InkWell(
                   borderRadius: BorderRadius.circular(6),
                   onTap: () {
-                    Navigator.pushNamed(
+                    Navigator.push(
                       context,
-                      AppRoutes.providerDetail,
-                      arguments: {
-                        'name': provider.name,
-                        'category': provider.category,
-                        'image': provider.imageUrl,
-                      },
+                      MaterialPageRoute(
+                        builder: (_) => ProviderDetailScreen(
+
+                        ),
+                      ),
                     );
                   },
                   child: Container(

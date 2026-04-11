@@ -3,8 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
+import '../../../../core/storage/token_storage.dart';
+import '../../../auth/presentation/ui/login_sheet.dart';
+
 void showAddressSheet(
     BuildContext context, {
+      required Map<String, dynamic> providerData,
+      required int id,
       required String name,
       required String image,
       required String selectedDate,
@@ -21,39 +26,64 @@ void showAddressSheet(
 
   bool isLoadingLocation = false;
 
-  // Function to handle GPS Location detection
+  double? latitude;
+  double? longitude;
+
   Future<void> handleLocationDetection(StateSetter setModalState) async {
     try {
       setModalState(() => isLoadingLocation = true);
 
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setModalState(() => isLoadingLocation = false);
+        debugPrint("Location services are disabled.");
+        return;
+      }
+
       LocationPermission permission = await Geolocator.checkPermission();
+
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
           setModalState(() => isLoadingLocation = false);
+          debugPrint("Location permission denied.");
           return;
         }
       }
 
+      if (permission == LocationPermission.deniedForever) {
+        setModalState(() => isLoadingLocation = false);
+        debugPrint("Location permission denied forever.");
+        return;
+      }
+
       Position position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
 
+      latitude = position.latitude;
+      longitude = position.longitude;
+
       List<Placemark> placemarks = await placemarkFromCoordinates(
-          position.latitude,
-          position.longitude
+        position.latitude,
+        position.longitude,
       );
 
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
+
         setModalState(() {
           houseController.text = place.subThoroughfare ?? "";
           streetController.text = place.thoroughfare ?? "";
           cityController.text = place.locality ?? "";
           addressController.text =
-          "${place.street}, ${place.subLocality}, ${place.locality} ${place.postalCode}";
+          "${place.street ?? ""}, ${place.subLocality ?? ""}, ${place.locality ?? ""} ${place.postalCode ?? ""}";
           isLoadingLocation = false;
         });
+      } else {
+        setModalState(() => isLoadingLocation = false);
       }
     } catch (e) {
       debugPrint("Location Error: $e");
@@ -72,13 +102,14 @@ void showAddressSheet(
             height: MediaQuery.of(context).size.height * 0.85,
             decoration: BoxDecoration(
               color: colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(32),
+              ),
             ),
             child: Form(
-              key: formKey, // Added Form validation
+              key: formKey,
               child: Column(
                 children: [
-                  // 1. DRAG HANDLE & HEADER
                   const SizedBox(height: 12),
                   Container(
                     width: 40,
@@ -94,11 +125,15 @@ void showAddressSheet(
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                            color: colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.5),
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
-                            icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+                            icon: const Icon(
+                              Icons.arrow_back_ios_new,
+                              size: 18,
+                            ),
                             color: colorScheme.primary,
                             onPressed: () => Navigator.pop(context),
                           ),
@@ -114,50 +149,63 @@ void showAddressSheet(
                     ),
                   ),
 
-                  // 2. INPUT SECTION
                   Expanded(
                     child: SingleChildScrollView(
                       padding: EdgeInsets.only(
-                          left: 20,
-                          right: 20,
-                          bottom: MediaQuery.of(context).viewInsets.bottom + 20
+                        left: 20,
+                        right: 20,
+                        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // GPS BUTTON
                           InkWell(
                             onTap: isLoadingLocation
                                 ? null
                                 : () => handleLocationDetection(setModalState),
                             borderRadius: BorderRadius.circular(15),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 15),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 16,
+                                horizontal: 15,
+                              ),
                               decoration: BoxDecoration(
-                                color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+                                color: colorScheme.primaryContainer.withValues(
+                                  alpha: 0.3,
+                                ),
                                 borderRadius: BorderRadius.circular(15),
-                                border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1)),
+                                border: Border.all(
+                                  color: colorScheme.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                ),
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   if (isLoadingLocation)
                                     SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: colorScheme.primary
-                                        )
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: colorScheme.primary,
+                                      ),
                                     )
                                   else
-                                    Icon(Icons.gps_fixed, color: colorScheme.primary, size: 20),
+                                    Icon(
+                                      Icons.gps_fixed,
+                                      color: colorScheme.primary,
+                                      size: 20,
+                                    ),
                                   const SizedBox(width: 12),
                                   Text(
-                                    isLoadingLocation ? "Locating..." : "Detect Current Location",
+                                    isLoadingLocation
+                                        ? "Locating..."
+                                        : "Detect Current Location",
                                     style: TextStyle(
-                                        color: colorScheme.primary,
-                                        fontWeight: FontWeight.bold
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ],
@@ -168,7 +216,9 @@ void showAddressSheet(
                           const SizedBox(height: 25),
                           Text(
                             "Address Details",
-                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 15),
 
@@ -177,19 +227,19 @@ void showAddressSheet(
                             children: [
                               Expanded(
                                 child: _buildModernField(
-                                    context,
-                                    "House No.",
-                                    "E.g. 12",
-                                    houseController
+                                  context,
+                                  "House No.",
+                                  "E.g. 12",
+                                  houseController,
                                 ),
                               ),
                               const SizedBox(width: 15),
                               Expanded(
                                 child: _buildModernField(
-                                    context,
-                                    "Street",
-                                    "E.g. 5th Ave",
-                                    streetController
+                                  context,
+                                  "Street",
+                                  "E.g. 5th Ave",
+                                  streetController,
                                 ),
                               ),
                             ],
@@ -197,26 +247,25 @@ void showAddressSheet(
                           const SizedBox(height: 20),
 
                           _buildModernField(
-                              context,
-                              "City / Region",
-                              "E.g. New York",
-                              cityController
+                            context,
+                            "City / Region",
+                            "E.g. New York",
+                            cityController,
                           ),
                           const SizedBox(height: 20),
 
                           _buildModernField(
-                              context,
-                              "Complete Address",
-                              "Landmark, Apartment, etc.",
-                              addressController,
-                              maxLines: 3
+                            context,
+                            "Complete Address",
+                            "Landmark, Apartment, etc.",
+                            addressController,
+                            maxLines: 3,
                           ),
                         ],
                       ),
                     ),
                   ),
 
-                  // 3. ACTION BUTTON
                   Padding(
                     padding: const EdgeInsets.all(20),
                     child: SizedBox(
@@ -231,24 +280,53 @@ void showAddressSheet(
                           ),
                           elevation: 0,
                         ),
-                        onPressed: () {
-                          if (formKey.currentState!.validate()) {
-                            Navigator.pop(context);
-                            Navigator.of(context, rootNavigator: true).pushNamed(
-                              AppRoutes.reviewSummary,
-                              arguments: {
-                                'address': "${houseController.text}, ${streetController.text}, ${cityController.text}. (${addressController.text})",
-                                'date': selectedDate,
-                                'time': selectedTime,
-                                'name': name,
-                                'image': image,
-                              },
+                        onPressed: () async {
+                          if (!formKey.currentState!.validate()) return;
+
+                          var token = await TokenStorage.get();
+
+                          if (token == null || token.isEmpty) {
+                            final loginSuccess = await showModalBottomSheet<bool>(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (_) => const LoginSheet(),
                             );
+
+                            if (loginSuccess != true) return;
+
+                            token = await TokenStorage.get();
+                            if (token == null || token.isEmpty) return;
                           }
+
+                          if (!context.mounted) return;
+
+                          Navigator.pop(context);
+                          Navigator.of(context, rootNavigator: true).pushNamed(
+                            AppRoutes.reviewSummary,
+                            arguments: {
+                              'providerData': providerData,
+                              'house_no': houseController.text,
+                              'street': streetController.text,
+                              'address':
+                              "${houseController.text}, ${streetController.text}, ${cityController.text} (${addressController.text})",
+                              'latitude': latitude,
+                              'longitude': longitude,
+                              'map_url': 'https://maps.google.com/?q=$latitude,$longitude',
+                              'date': selectedDate,
+                              'time': selectedTime,
+                              'name': name,
+                              'image': image,
+                              'id': id,
+                            },
+                          );
                         },
                         child: const Text(
                           "Confirm & Next",
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -263,49 +341,60 @@ void showAddressSheet(
   );
 }
 
-// Helper Widget for New UI Inputs with Validation
 Widget _buildModernField(
     BuildContext context,
     String label,
     String hint,
-    TextEditingController controller,
-    {int maxLines = 1}
-    ) {
+    TextEditingController controller, {
+      int maxLines = 1,
+    }) {
   final theme = Theme.of(context);
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.outline,
-              fontWeight: FontWeight.bold
-          )
+        label,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.outline,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       const SizedBox(height: 8),
       TextFormField(
         controller: controller,
         maxLines: maxLines,
         style: theme.textTheme.bodyLarge,
-        validator: (value) => (value == null || value.isEmpty) ? "Required field" : null,
+        validator: (value) =>
+        (value == null || value.isEmpty) ? "Required field" : null,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: theme.colorScheme.outline.withValues(alpha: 0.5)),
+          hintStyle: TextStyle(
+            color: theme.colorScheme.outline.withValues(alpha: 0.5),
+          ),
           filled: true,
-          fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          fillColor:
+          theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+            borderSide: BorderSide(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
+            borderSide: BorderSide(
+              color: theme.colorScheme.primary,
+              width: 1.5,
+            ),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),

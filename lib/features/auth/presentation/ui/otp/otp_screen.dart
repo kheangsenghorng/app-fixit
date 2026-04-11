@@ -72,12 +72,17 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
     ref.listen(authControllerProvider, (_, next) {
       if (next.hasValue && next.value != null) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/main', (_) => false);
+        Navigator.of(context).pop(true); // return success
+        return;
       }
+
       next.whenOrNull(
         error: (err, _) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(err.toString()), backgroundColor: Colors.redAccent),
+            SnackBar(
+              content: Text(err.toString()),
+              backgroundColor: Colors.redAccent,
+            ),
           );
         },
       );

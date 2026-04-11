@@ -15,9 +15,24 @@ class ApiEndpoints {
 
   static const activeCategory = "/category/active";
 
+  // get all services
   static const activeServices = "/service/active";
 
   static String activeByCategory(int categoryId) {
     return "/type/active?category_id=$categoryId";
   }
+
+  // Get service by id types
+  static String activeServicesByType(int typeId){
+     return "/service/active?type_id=$typeId";
+  }
+  // get by id service
+  static String service(int serviceId) {
+    return "/service/$serviceId/serviceId";
+  }
+
+  static String bookingService = "/customer/service-bookings";
+
+  static String coupons = "/v1/coupons/show-apply";
+  static String couponUsage = "/v1/coupon-usages";
 }

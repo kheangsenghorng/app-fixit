@@ -2,24 +2,78 @@ import 'package:fixit/features/user/services/providers/providers_page.dart';
 import 'package:fixit/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:fixit/widgets/main_bottom_nav.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../../../core/models/type_model.dart';
+import '../../../../core/provider/type_listener_provider.dart';
+import '../main_screen.dart';
+import '../search/data/providers/types_provider.dart';
 
 
-class ServiceProvidersPage extends StatelessWidget {
+class ServiceProvidersPage extends ConsumerStatefulWidget {
   final int currentIndex;
   final Function(int)? onNavTap;
-  final String serviceName;
+
 
   const ServiceProvidersPage({
     super.key,
     required this.currentIndex,
     this.onNavTap,
-    required this.serviceName,
   });
+
+  @override
+  ConsumerState<ServiceProvidersPage> createState() =>
+      _ServiceProvidersPageState();
+}
+
+class _ServiceProvidersPageState extends ConsumerState<ServiceProvidersPage> {
+  // ── same background colors used in ProvidersPage ──────────────────
+  final List<Color> _bgColors = const [
+    Color(0xFFE8D5F5),
+    Color(0xFFE5D5C5),
+    Color(0xFFD5F5E3),
+    Color(0xFFF5F1D5),
+    Color(0xFFD5D9F5),
+    Color(0xFFD5F5F0),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    // ── fetch data exactly like ProvidersPage ─────────────────────────
+    Future.microtask(() {
+      ref.read(typeProvider.notifier).loadInitialTypes();
+    });
+  }
+
+  /// Map a [TypeModel] → [ProviderModel] (same logic as ProvidersPage)
+  ProviderModel _mapType(TypeModel type, int index) {
+    return ProviderModel(
+      name: type.name,
+      category: type.category!.name,
+      rating: 4.5,
+      bgColor: _bgColors[index % _bgColors.length],
+      imageUrl: type.icon.isNotEmpty ? type.icon : null,
+      typeId: type.id, // add this
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+
+    // ── listen for real-time updates ──────────────────────────────────
+    ref.watch(typeListenerProvider);
+    final state = ref.watch(typeProvider);
+
+    // ── group types by category name ──────────────────────────────────
+    final Map<String, List<TypeModel>> grouped = {};
+    for (final type in state.types) {
+      final key = type.category?.name;
+      grouped.putIfAbsent(key!, () => []).add(type);
+    }
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -31,86 +85,73 @@ class ServiceProvidersPage extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Service Providers',
+          'Category Service',
           style: theme.textTheme.headlineMedium,
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
-          children: [
-            _buildCategorySection(
-              context,
-              title: "Electrician Providers",
-              icon: "⚡",
-              providers: [
-                ProviderModel(
-                  name: "Jackson",
-                  category: "Electrician",
-                  rating: 3.9,
-                  bgColor: const Color(0xFFE8D5F5),
-                  imageUrl: "assets/images/providers/img.png",
-                ),
-                ProviderModel(
-                  name: "Emily Jani",
-                  category: "Electrician",
-                  rating: 4.8,
-                  bgColor: const Color(0xFFF5E1D5),
-                  imageUrl: "assets/images/providers/img_1.png",
-                ),
-              ],
+      body: Builder(builder: (_) {
+        // ── loading ───────────────────────────────────────────────────
+        if (state.isLoading && state.types.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        // ── error ─────────────────────────────────────────────────────
+        if (state.error != null && state.types.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Failed to load providers.\n${state.error}',
+                textAlign: TextAlign.center,
+              ),
             ),
-            _buildCategorySection(
-              context,
-              title: "Plumber Providers",
-              icon: "🔧",
-              providers: [
-                ProviderModel(
-                  name: "Ethan Lita",
-                  category: "Plumber",
-                  rating: 4.7,
-                  bgColor: const Color(0xFFD5F5E3),
-                  imageUrl: "assets/images/providers/img_2.png",
-                ),
-                ProviderModel(
-                  name: "Isabella Una",
-                  category: "Plumber",
-                  rating: 3.9,
-                  bgColor: const Color(0xFFF5F1D5),
-                  imageUrl: "assets/images/providers/img_3.png",
-                ),
-              ],
+          );
+        }
+
+        // ── empty ─────────────────────────────────────────────────────
+        if (grouped.isEmpty) {
+          return const Center(child: Text('No providers found'));
+        }
+
+        // ── content ───────────────────────────────────────────────────
+        return RefreshIndicator(
+          onRefresh: () async {
+            await ref.read(typeProvider.notifier).refresh();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              children: grouped.entries.map((entry) {
+                final categoryName = entry.key;
+                final types = entry.value;
+                final providers = types
+                    .asMap()
+                    .entries
+                    .map((e) => _mapType(e.value, e.key))
+                    .toList();
+
+                return _buildCategorySection(
+                  context,
+                  title: categoryName,
+                  providers: providers,
+                  categoryId: types.first.category?.id,
+                );
+              }).toList(),
             ),
-            _buildCategorySection(
-              context,
-              title: "Carpenter Providers",
-              icon: "🪵",
-              providers: [
-                ProviderModel(
-                  name: "Aiden",
-                  category: "Carpenter",
-                  rating: 3.8,
-                  bgColor: const Color(0xFFD5D9F5),
-                  imageUrl: "assets/images/providers/img_4.png",
-                ),
-                ProviderModel(
-                  name: "Logan",
-                  category: "Carpenter",
-                  rating: 4.4,
-                  bgColor: const Color(0xFFD5F5F0),
-                  imageUrl: "assets/images/providers/img_5.png",
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      }),
       bottomNavigationBar: MainBottomNav(
-        currentIndex: currentIndex,
+        currentIndex: widget.currentIndex,
         onTap: (index) {
-          if (onNavTap != null) {
-            onNavTap!(index);
-          }
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MainScreen(currentIndex: index),
+            ),
+                (route) => false,
+          );
         },
       ),
     );
@@ -119,9 +160,9 @@ class ServiceProvidersPage extends StatelessWidget {
   Widget _buildCategorySection(
       BuildContext context, {
         required String title,
-        required String icon,
         required List<ProviderModel> providers,
-        String buttonText = "Details",
+        int? categoryId,
+        String buttonText = 'Details',
       }) {
     final theme = Theme.of(context);
 
@@ -132,17 +173,11 @@ class ServiceProvidersPage extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Text(icon, style: const TextStyle(fontSize: 22)),
-                  const SizedBox(width: 10),
-                  Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               InkWell(
                 onTap: () {
@@ -151,15 +186,15 @@ class ServiceProvidersPage extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (_) => ProvidersPage(
                         serviceName: title,
-                        categoryId: 1,
-                        currentIndex: currentIndex,
-                        onNavTap: onNavTap,
+                        categoryId: categoryId,
+                        currentIndex: widget.currentIndex,
+                        onNavTap: widget.onNavTap,
                       ),
                     ),
                   );
                 },
                 child: Text(
-                  "View all",
+                  'View all',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.primary,
                     fontWeight: FontWeight.w600,
@@ -179,6 +214,7 @@ class ServiceProvidersPage extends StatelessWidget {
               return ProviderCard(
                 provider: providers[index],
                 buttonText: buttonText,
+                currentIndex: widget.currentIndex,
               );
             },
           ),
@@ -192,11 +228,13 @@ class ServiceProvidersPage extends StatelessWidget {
 class ProviderCard extends StatelessWidget {
   final ProviderModel provider;
   final String buttonText;
+  final int currentIndex;
 
   const ProviderCard({
     super.key,
     required this.provider,
     required this.buttonText,
+    required this.currentIndex,
   });
 
   @override
@@ -221,7 +259,6 @@ class ProviderCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // FLEXIBLE IMAGE
           Expanded(
             child: Container(
               margin: const EdgeInsets.all(8),
@@ -264,8 +301,7 @@ class ProviderCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.star,
-                        size: 16, color: theme.colorScheme.primary),
+                    Icon(Icons.star, size: 16, color: theme.colorScheme.primary),
                     const SizedBox(width: 4),
                     Text(
                       provider.rating.toString(),
@@ -276,23 +312,21 @@ class ProviderCard extends StatelessWidget {
                     ),
                   ],
                 ),
-
-                // --- NAVIGATION WRAPPER ADDED HERE ---
                 GestureDetector(
                   onTap: () {
                     Navigator.pushNamed(
                       context,
-                      AppRoutes.providerDetail,
+                      AppRoutes.serviceCard,
                       arguments: {
-                        'name': provider.name,
-                        'category': provider.category,
-                        'image': provider.imageUrl, // This is where the image "takes"
-
+                        'nameType': provider.name,
+                        'typeId': provider.typeId,
+                        'currentIndex': currentIndex,
                       },
                     );
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary,
                       borderRadius: BorderRadius.circular(8),
@@ -304,7 +338,6 @@ class ProviderCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // -------------------------------------
               ],
             ),
           ),
@@ -313,7 +346,6 @@ class ProviderCard extends StatelessWidget {
     );
   }
 
-  /// Handles both asset & network images safely
   Widget _buildProviderImage() {
     final imageUrl = provider.imageUrl;
 
@@ -326,7 +358,6 @@ class ProviderCard extends StatelessWidget {
         imageUrl,
         width: double.infinity,
         height: double.infinity,
-
       );
     }
 
@@ -334,7 +365,6 @@ class ProviderCard extends StatelessWidget {
       imageUrl,
       width: double.infinity,
       height: double.infinity,
-
       errorBuilder: (context, error, stackTrace) => _fallbackAvatar(),
     );
   }
@@ -349,13 +379,14 @@ class ProviderCard extends StatelessWidget {
     );
   }
 }
-
 class ProviderModel {
   final String name;
   final String category;
   final double rating;
   final Color bgColor;
   final String? imageUrl;
+  final int? typeId; // add this
+
 
   ProviderModel({
     required this.name,
@@ -363,5 +394,6 @@ class ProviderModel {
     required this.rating,
     required this.bgColor,
     this.imageUrl,
+    this.typeId, // add this
   });
 }

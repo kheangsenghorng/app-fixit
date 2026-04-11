@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 
 class ProviderHeader extends StatelessWidget {
   final String imageUrl;
+  final bool isNetworkImage;
 
-  const ProviderHeader({super.key, required this.imageUrl});
+  const ProviderHeader({
+    super.key,
+    required this.imageUrl,
+    required this.isNetworkImage,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,27 +29,49 @@ class ProviderHeader extends StatelessWidget {
           ),
         ),
 
-        // 2. The Main Image with a subtle float effect
+        // 2. Main Image
         Positioned(
           bottom: 0,
           left: 0,
           right: 0,
           child: Hero(
             tag: imageUrl,
-            child: Container(
+            child: SizedBox(
               height: 320,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage(imageUrl),
-                  fit: BoxFit.contain,
-                  alignment: Alignment.bottomCenter,
-                ),
+              child: isNetworkImage
+                  ? Image.network(
+                imageUrl,
+                fit: BoxFit.contain,
+                alignment: Alignment.bottomCenter,
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Icon(
+                      Icons.image_not_supported_rounded,
+                      size: 64,
+                      color: colorScheme.onSurface.withValues(alpha: 0.3),
+                    ),
+                  );
+                },
+              )
+                  : Image.asset(
+                imageUrl,
+                fit: BoxFit.contain,
+                alignment: Alignment.bottomCenter,
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Icon(
+                      Icons.image_not_supported_rounded,
+                      size: 64,
+                      color: colorScheme.onSurface.withValues(alpha: 0.3),
+                    ),
+                  );
+                },
               ),
             ),
           ),
         ),
 
-        // 3. Gradient Overlay for readability and depth
+        // 3. Gradient Overlay
         Positioned.fill(
           child: Container(
             decoration: BoxDecoration(
@@ -64,12 +91,15 @@ class ProviderHeader extends StatelessWidget {
           ),
         ),
 
-        // 4. Floating Badge (e.g., Experience or Top Rated)
+        // 4. Floating Badge
         Positioned(
           bottom: 20,
           right: 24,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 8,
+            ),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
@@ -83,7 +113,11 @@ class ProviderHeader extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.star_rounded, color: Colors.orange, size: 20),
+                const Icon(
+                  Icons.star_rounded,
+                  color: Colors.orange,
+                  size: 20,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   "4.9",

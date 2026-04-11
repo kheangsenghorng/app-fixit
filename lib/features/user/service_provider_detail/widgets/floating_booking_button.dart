@@ -13,6 +13,8 @@ class FloatingBookingButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+
+
     // 1. Remove the Positioned widget from here
     return GestureDetector(
       onTap: () => scheduleBookingSheet(context, providerData),
