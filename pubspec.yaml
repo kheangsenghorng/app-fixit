@@ -33,6 +33,11 @@ dependencies:
   pinput: ^6.0.1
   image_picker: ^1.2.1
   firebase_core: ^4.4.0
+  flutter_svg: ^2.0.10+1
+  path_provider: ^2.1.4
+  share_plus: ^10.0.2
+  image_gallery_saver: ^2.0.3
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:
