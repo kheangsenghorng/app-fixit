@@ -35,4 +35,12 @@ class ApiEndpoints {
 
   static String coupons = "/v1/coupons/show-apply";
   static String couponUsage = "/v1/coupon-usages";
+
+  static String payment = "/customer/payments";
+
+  static String generatePayment = "/generate-payment";
+
+  static String checkMd5 = "/payments/khqr/check-md5";
+
+  static String downloadQRcode = "/payments/download-qr";
 }

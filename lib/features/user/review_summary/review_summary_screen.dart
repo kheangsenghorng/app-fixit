@@ -2,6 +2,7 @@ import 'package:fixit/features/user/review_summary/widgets/coupon_section.dart';
 import 'package:fixit/features/user/review_summary/widgets/floating_action_section.dart';
 import 'package:fixit/features/user/review_summary/widgets/info_badge.dart';
 import 'package:fixit/features/user/review_summary/widgets/note_section.dart';
+import 'package:fixit/features/user/review_summary/widgets/payment_qr_dialog.dart';
 import 'package:fixit/features/user/review_summary/widgets/section_header_label.dart';
 import 'package:fixit/features/user/review_summary/widgets/show_success_booking_dialog.dart';
 import 'package:flutter/material.dart';
@@ -9,10 +10,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/coupon_model.dart';
 import '../../auth/presentation/providers/auth_controller.dart';
+import 'data/model/payment_request_model.dart';
 import 'data/providers/service_booking_provider.dart';
 import 'data/repositories/coupon_repository.dart';
 
 import 'data/repositories/coupon_usage_repository.dart';
+import 'data/repositories/payment_repository.dart';
 import 'widgets/booking_details_card.dart';
 import 'widgets/price_summary_section.dart';
 import 'widgets/provider_profile_card.dart';
@@ -273,20 +276,84 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
               time: timeText,
               totalPrice: discountedPrice ?? basePrice,
               originalPrice: appliedCoupon != null ? basePrice : null,
-              onPressed: () async {
+              onPaymentSelected: (method) async {
                 try {
                   await ref.read(authControllerProvider.notifier).loadProfile();
                   final auth = ref.read(authControllerProvider).valueOrNull;
                   final int? userId = auth?.user?.id;
 
                   if (userId == null) {
-                    debugPrint('User ID is null');
-                    return;
+                    throw Exception('User not found');
                   }
 
+                  final paymentRepository = ref.read(paymentRepositoryProvider);
                   final bookingRepository = ref.read(serviceBookingRepositoryProvider);
 
-                  await bookingRepository.createBooking(
+                  final totalAmount = discountedPrice ?? basePrice;
+                  final discountAmount =
+                  appliedCoupon != null ? (basePrice - totalAmount) : 0;
+
+                  String transactionId;
+
+                  if (method == 'khqr') {
+                    final paymentResponse = await paymentRepository.generatePayment(
+                      PaymentRequest(
+                        amount: totalAmount,
+                        billNumber: 'BOOKING-${DateTime.now().millisecondsSinceEpoch}',
+                        mobileNumber: '012345678',
+                        storeLabel: 'FiXIT',
+                        terminalLabel: 'App',
+                        purposeOfTransaction: 'Service booking payment',
+                        expirationTimestamp: DateTime.now()
+                            .add(const Duration(minutes: 30))
+                            .millisecondsSinceEpoch,
+                      ),
+                    );
+
+                    final md5 = paymentResponse.data.md5;
+                    final deeplink = paymentResponse.data.deeplink?.shortLink;
+
+                    final imageBase64 = paymentResponse.data.image?.imageBase64;
+
+                    if (md5 == null || md5.isEmpty) {
+                      throw Exception('Payment md5 not found');
+                    }
+
+                    if (imageBase64 == null || imageBase64.isEmpty) {
+                      throw Exception('QR image not found');
+                    }
+
+                    if (!context.mounted) return;
+
+                    final externalRef = await Navigator.push<String>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PaymentQrPage(
+                          base64Image: imageBase64,
+                          deeplink: deeplink,
+                          onCheckPayment: () => paymentRepository.checkMd5(md5),
+                        ),
+                      ),
+                    );
+
+                    if (externalRef == null || externalRef.isEmpty) {
+                      if (!context.mounted) return;
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          backgroundColor: Colors.red,
+                          content: const Text('Payment timeout or not completed'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    transactionId = externalRef;
+                  } else {
+                    transactionId = 'CASH-${DateTime.now().millisecondsSinceEpoch}';
+                  }
+
+                  final bookingResponse = await bookingRepository.createBooking(
                     userId: userId,
                     serviceId: providerData['id'] ?? 0,
                     houseNo: houseNo,
@@ -300,33 +367,61 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
                     note: noteController.text.trim(),
                   );
 
-                  // Save coupon usage after booking success
+                  final bookingId = bookingResponse.data['data']?['id'];
+
+                  if (bookingId == null) {
+                    throw Exception('Booking ID not found');
+                  }
+
+                  final int ownerId =
+                      providerData['owner']?['id'] ??
+                          providerData['user_id'] ??
+                          providerData['owner_id'] ??
+                          0;
+
+                  if (ownerId == 0) {
+                    throw Exception('Owner ID not found');
+                  }
+
+                  await paymentRepository.payment(
+                    PaymentRequest(
+                      userId: userId,
+                      ownerId: ownerId,
+                      serviceBookingId: bookingId,
+                      couponsId: appliedCoupon?.id,
+                      transactionId: transactionId,
+                      originalAmount: basePrice,
+                      discountAmount: discountAmount,
+                      finalAmount: totalAmount,
+                      method: method,
+                      status: method == 'khqr' ? 'paid' : 'pending',
+                    ),
+                  );
+
                   if (appliedCoupon != null) {
-                    await ref.read(
-                      couponUsageRepositoryProvider,
-                    ).createCouponUsage(
+                    await ref.read(couponUsageRepositoryProvider).createCouponUsage(
                       couponId: appliedCoupon!.id,
                       userId: userId,
                       timesUsed: 1,
                     );
                   }
 
-                  if (context.mounted) {
-                    showSuccessBookingDialog(
-                      context,
-                      time: timeText,
-                    );
-                  }
+                  if (!context.mounted) return;
+
+                  showSuccessBookingDialog(
+                    context,
+                    time: timeText,
+                  );
                 } catch (e) {
                   debugPrint('Booking Error: $e');
 
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(e.toString()),
-                      ),
-                    );
-                  }
+                  if (!context.mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.toString()),
+                    ),
+                  );
                 }
               },
             ),
