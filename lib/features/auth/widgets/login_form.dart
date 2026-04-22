@@ -24,7 +24,6 @@ class LoginForm extends ConsumerWidget {
             ),
             onChanged: (value) {
               notifier.setLogin(value);
-              ref.read(authControllerProvider.notifier);
             },
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -42,7 +41,6 @@ class LoginForm extends ConsumerWidget {
             ),
             onChanged: (value) {
               notifier.setPassword(value);
-              ref.read(authControllerProvider.notifier);
             },
             validator: (value) {
               if (value == null || value.trim().isEmpty) {

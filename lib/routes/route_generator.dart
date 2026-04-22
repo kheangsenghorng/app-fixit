@@ -71,7 +71,6 @@ class RouteGenerator {
         return buildRoute(
           OtpScreen(
             phone: args?['phone'] ?? '',
-            password: args?['password'] ?? '',
           ),
         );
 

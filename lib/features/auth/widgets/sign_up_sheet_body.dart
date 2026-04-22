@@ -27,18 +27,20 @@ class SignUpSheetBody extends ConsumerWidget {
           if (auth == null) return;
 
           final phone = SignUpForm.phoneController.text;
-          final password = SignUpForm.passwordController.text;
 
           // 🔐 OTP FLOW
-          if (auth.requestId != null) {
-            if (prev?.value?.requestId != auth.requestId) {
+          if (auth.isOtp) {
+            final previousWasSameOtp =
+                prev?.valueOrNull?.requestId == auth.requestId &&
+                    prev?.valueOrNull?.login == auth.login &&
+                    prev?.valueOrNull?.message == auth.message;
+
+            if (!previousWasSameOtp) {
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) => OtpScreen(
                     phone: phone,
-                    password: password,
-
                   ),
                 ),
               );
