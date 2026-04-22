@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pinput/pinput.dart';
 
@@ -8,12 +9,10 @@ import '../../providers/auth_controller.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
   final String phone;
-  final String password;
 
   const OtpScreen({
     super.key,
     required this.phone,
-    required this.password,
   });
 
   @override
@@ -25,23 +24,53 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   final focusNode = FocusNode();
 
   Timer? _timer;
-  int _secondsRemaining = 300; // 5 Minutes
+  int _secondsRemaining = 300;
   bool _canResend = false;
+  bool _handledSuccess = false;
+  ProviderSubscription<AsyncValue>? _subscription;
 
   @override
   void initState() {
     super.initState();
     _startTimer();
+
+    _subscription = ref.listenManual(authControllerProvider, (_, next) {
+      if (!mounted) return;
+
+      next.whenOrNull(
+        data: (auth) {
+          if (auth == null || _handledSuccess) return;
+          if (!auth.isLoggedIn) return;
+
+          _handledSuccess = true;
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/main',
+                (route) => false,
+          );
+        },
+        error: (err, _) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                err.toString().replaceAll('Exception: ', ''),
+              ),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        },
+      );
+    });
   }
 
   void _startTimer([int seconds = 300]) {
     _timer?.cancel();
-    setState(() {
-      _secondsRemaining = seconds;
-      _canResend = false;
-    });
+    _secondsRemaining = seconds;
+    _canResend = false;
 
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+
       if (_secondsRemaining > 0) {
         setState(() => _secondsRemaining--);
       } else {
@@ -49,6 +78,10 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         _timer?.cancel();
       }
     });
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   String _formatTime(int seconds) {
@@ -57,8 +90,39 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     return "$minutes:$secs";
   }
 
+  Future<void> _verifyCode() async {
+    if (pinController.text.length != 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter the 5-digit code')),
+      );
+      return;
+    }
+
+    await ref.read(authControllerProvider.notifier).verifyOtp(
+      phone: widget.phone,
+      code: pinController.text,
+    );
+  }
+
+  Future<void> _resendCode() async {
+    if (!_canResend) return;
+
+    pinController.clear();
+
+    await ref.read(authRepositoryProvider).sendOtp(widget.phone);
+
+    if (!mounted) return;
+
+    _startTimer(300);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("A new code has been sent")),
+    );
+  }
+
   @override
   void dispose() {
+    _subscription?.close();
     _timer?.cancel();
     pinController.dispose();
     focusNode.dispose();
@@ -70,28 +134,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     final authState = ref.watch(authControllerProvider);
     final themeColor = const Color(0xFF0056D2);
 
-    ref.listen(authControllerProvider, (_, next) {
-      if (next.hasValue && next.value != null) {
-        Navigator.of(context).pop(true); // return success
-        return;
-      }
-
-      next.whenOrNull(
-        error: (err, _) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(err.toString()),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
-        },
-      );
-    });
-
     final defaultPinTheme = PinTheme(
       width: 56,
       height: 62,
-      textStyle: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: themeColor),
+      textStyle: const TextStyle(
+        fontSize: 22,
+        fontWeight: FontWeight.bold,
+      ),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -104,7 +153,11 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         color: Colors.white,
         border: Border.all(color: themeColor, width: 2),
         boxShadow: [
-          BoxShadow(color: themeColor.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: themeColor.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
     );
@@ -119,7 +172,14 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         centerTitle: true,
-        title: Text("fixit", style: TextStyle(color: themeColor, fontSize: 24, fontWeight: FontWeight.bold)),
+        title: Text(
+          "fixit",
+          style: TextStyle(
+            color: themeColor,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -139,24 +199,34 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               const SizedBox(height: 24),
               const Text(
                 "Verification Code",
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
               const SizedBox(height: 12),
               RichText(
                 textAlign: TextAlign.center,
                 text: TextSpan(
-                  style: const TextStyle(fontSize: 16, color: Colors.black54, height: 1.5),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.black54,
+                    height: 1.5,
+                  ),
                   children: [
                     const TextSpan(text: "Enter the 5-digit code sent to\n"),
                     TextSpan(
                       text: widget.phone,
-                      style: TextStyle(color: themeColor, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: themeColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 40),
-
               Pinput(
                 length: 5,
                 controller: pinController,
@@ -165,17 +235,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 focusedPinTheme: focusedPinTheme,
                 hapticFeedbackType: HapticFeedbackType.lightImpact,
                 separatorBuilder: (index) => const SizedBox(width: 10),
-                onCompleted: (pin) async {
-                  await ref.read(authControllerProvider.notifier).verifyOtp(
-                    phone: widget.phone,
-                    code: pin,
-                    password: widget.password,
-                  );
-                },
+                onCompleted: (_) => _verifyCode(),
               ),
-
               const SizedBox(height: 40),
-
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -184,27 +246,35 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                     backgroundColor: themeColor,
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
-                  onPressed: authState.isLoading || _secondsRemaining == 0
-                      ? null
-                      : () async {
-                    await ref.read(authControllerProvider.notifier).verifyOtp(
-                      phone: widget.phone,
-                      code: pinController.text,
-                      password: widget.password,
-                    );
-                  },
+                  onPressed: authState.isLoading ? null : _verifyCode,
                   child: authState.isLoading
-                      ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Text("Verify Account", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      ? const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                      : const Text(
+                    "Verify Account",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
-
               const SizedBox(height: 32),
-
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(100),
@@ -212,7 +282,11 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.timer_outlined, size: 18, color: _canResend ? Colors.grey : themeColor),
+                    Icon(
+                      Icons.timer_outlined,
+                      size: 18,
+                      color: _canResend ? Colors.grey : themeColor,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       _formatTime(_secondsRemaining),
@@ -224,33 +298,18 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 20),
-
               GestureDetector(
-                onTap: !_canResend
-                    ? null
-                    : () async {
-                  pinController.clear();
-
-                  // 1. Perform async request
-                  await ref.read(authRepositoryProvider).sendOtp(widget.phone);
-
-                  // 2. CHECK MOUNTED before using context (fixes the warning)
-                  if (!context.mounted) return;
-
-                  _startTimer(300);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("A new code has been sent")),
-                  );
-                },
+                onTap: _canResend ? _resendCode : null,
                 child: Text(
                   "Didn't receive code? Send again",
                   style: TextStyle(
                     color: _canResend ? themeColor : Colors.grey,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
-                    decoration: _canResend ? TextDecoration.underline : TextDecoration.none,
+                    decoration: _canResend
+                        ? TextDecoration.underline
+                        : TextDecoration.none,
                   ),
                 ),
               ),

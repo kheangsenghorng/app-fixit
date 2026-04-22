@@ -1,12 +1,11 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../features/auth/data/auth_repository.dart';
 import '../../features/auth/presentation/providers/auth_controller.dart';
-import '../../features/user/profile/providers/user_provider.dart';
-import '../constants/api_endpoints.dart';
 import '../storage/token_storage.dart';
-import 'dio_provider.dart';
 
 class AuthInterceptor extends Interceptor {
   final Ref ref;
@@ -14,16 +13,29 @@ class AuthInterceptor extends Interceptor {
   AuthInterceptor(this.ref);
 
   bool _isRefreshing = false;
-  bool _isLoggingOut = false;
+  final List<Completer<void>> _pendingRequests = [];
+
+  bool _isAuthRoute(String path) {
+    return path.contains('/login') ||
+        path.contains('/register') ||
+        path.contains('/verifyOtp') ||
+        path.contains('/sendOtp') ||
+        path.contains('/refresh') ||
+        path.contains('/logout');
+  }
 
   @override
   Future<void> onRequest(
       RequestOptions options,
       RequestInterceptorHandler handler,
       ) async {
+    if (_isAuthRoute(options.path)) {
+      return handler.next(options);
+    }
+
     final token = await TokenStorage.get();
 
-    if (token != null) {
+    if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
 
@@ -35,68 +47,118 @@ class AuthInterceptor extends Interceptor {
       DioException err,
       ErrorInterceptorHandler handler,
       ) async {
-    final path = err.requestOptions.path;
+    final request = err.requestOptions;
+    final statusCode = err.response?.statusCode;
 
-    final isAuthRoute =
-        path.contains(ApiEndpoints.login) ||
-            path.contains(ApiEndpoints.verifyOtp) ||
-            path.contains(ApiEndpoints.sendOtp);
-
-    // ❌ DO NOT REFRESH during auth / OTP flow
-    if (isAuthRoute) {
+    if (statusCode != 401 || _isAuthRoute(request.path)) {
       return handler.next(err);
     }
 
-    // ❌ Only handle 401 when token exists
-    final token = await TokenStorage.get();
-    if (token == null) {
+    if (request.extra['retried'] == true) {
+      await _logoutLocally();
       return handler.next(err);
     }
 
-    // ✅ REFRESH TOKEN
-    if (err.response?.statusCode == 401 &&
-        !_isRefreshing &&
-        !_isLoggingOut &&
-        !path.contains(ApiEndpoints.refresh) &&
-        !path.contains(ApiEndpoints.logout)) {
-      _isRefreshing = true;
-
-      try {
-        final dio = Dio(
-          BaseOptions(baseUrl: ref.read(dioProvider).options.baseUrl),
-        );
-
-        final repo = AuthRepository(dio);
-
-        final auth = await repo.refreshToken();
-        final newToken = auth.token;
-
-        // ✅ SAVE TOKEN (IMPORTANT)
-        await TokenStorage.save(newToken!);
-
-        // ✅ UPDATE STATE
-        ref.read(authControllerProvider.notifier).updateAuth(newToken, null);
-
-        // 🔁 Retry original request
-        final request = err.requestOptions;
-        request.headers['Authorization'] = 'Bearer $newToken';
-
+    try {
+      if (_isRefreshing) {
+        final completer = Completer<void>();
+        _pendingRequests.add(completer);
+        await completer.future;
+      } else {
+        _isRefreshing = true;
+        await _refreshToken();
         _isRefreshing = false;
 
-        final response = await dio.fetch(request);
-        return handler.resolve(response);
-
-      } catch (e) {
-        _isRefreshing = false;
-        _isLoggingOut = true;
-
-        // 🔥 FORCE LOGOUT
-        await TokenStorage.clear();
-        ref.invalidate(userProvider);
-        ref.read(authControllerProvider.notifier).forceLogout();
+        for (final completer in _pendingRequests) {
+          if (!completer.isCompleted) {
+            completer.complete();
+          }
+        }
+        _pendingRequests.clear();
       }
+
+      final newToken = await TokenStorage.get();
+
+      if (newToken == null || newToken.isEmpty) {
+        await _logoutLocally();
+        return handler.next(err);
+      }
+
+      request.headers['Authorization'] = 'Bearer $newToken';
+      request.extra['retried'] = true;
+
+      final retryDio = Dio(
+        BaseOptions(
+          baseUrl: dotenv.env['FLUTTER_PUBLIC_API_URL']!,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      final response = await retryDio.fetch(request);
+      return handler.resolve(response);
+    } catch (_) {
+      _isRefreshing = false;
+
+      for (final completer in _pendingRequests) {
+        if (!completer.isCompleted) {
+          completer.completeError(Exception('Refresh failed'));
+        }
+      }
+      _pendingRequests.clear();
+
+      await _logoutLocally();
+      return handler.next(err);
+    }
+  }
+
+  Future<void> _refreshToken() async {
+    final token = await TokenStorage.get();
+
+    if (token == null || token.isEmpty) {
+      throw Exception('No token available');
     }
 
-    return handler.next(err);
+    final refreshDio = Dio(
+      BaseOptions(
+        baseUrl: dotenv.env['FLUTTER_PUBLIC_API_URL']!,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      ),
+    );
+
+    final response = await refreshDio.post(
+      '/refresh',
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      ),
+    );
+
+    final data = response.data;
+
+    if (data is! Map<String, dynamic>) {
+      throw Exception('Invalid refresh response');
+    }
+
+    final newToken = data['token']?.toString();
+
+    if (newToken == null || newToken.isEmpty) {
+      throw Exception('Refresh token missing');
+    }
+
+    await TokenStorage.save(newToken);
+
+    ref.read(authControllerProvider.notifier).updateAuth(newToken, null);
+  }
+
+  Future<void> _logoutLocally() async {
+    await TokenStorage.clear();
+    await ref.read(authControllerProvider.notifier).forceLogout();
   }
 }
