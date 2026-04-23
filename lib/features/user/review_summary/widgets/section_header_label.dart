@@ -19,7 +19,7 @@ class SectionHeaderLabel extends StatelessWidget {
         style: theme.textTheme.labelSmall?.copyWith(
           letterSpacing: 1.2,
           fontWeight: FontWeight.w900,
-          color: theme.colorScheme.primary.withOpacity(0.8),
+          color: theme.colorScheme.primary.withValues(alpha: 0.8),
         ),
       ),
     );

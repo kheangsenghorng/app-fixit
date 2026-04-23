@@ -294,8 +294,9 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
                   appliedCoupon != null ? (basePrice - totalAmount) : 0;
 
                   String transactionId;
+                  String paymentStatus;
 
-                  if (method == 'khqr') {
+                  if (method == 'khqr' || method == 'bakong') {
                     final paymentResponse = await paymentRepository.generatePayment(
                       PaymentRequest(
                         amount: totalAmount,
@@ -312,7 +313,6 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
 
                     final md5 = paymentResponse.data.md5;
                     final deeplink = paymentResponse.data.deeplink?.shortLink;
-
                     final imageBase64 = paymentResponse.data.image?.imageBase64;
 
                     if (md5 == null || md5.isEmpty) {
@@ -324,13 +324,18 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
                     }
 
                     if (!context.mounted) return;
+                    Navigator.of(context).pop();
 
-                    final externalRef = await Navigator.push<String>(
-                      context,
+                    await Future.delayed(const Duration(milliseconds: 150));
+
+                    if (!context.mounted) return;
+
+                    final String? externalRef = await Navigator.of(context).push<String>(
                       MaterialPageRoute(
                         builder: (_) => PaymentQrPage(
                           base64Image: imageBase64,
-                          deeplink: deeplink,
+                          deeplink: method == 'bakong' ? deeplink : null,
+                          isBakongOnly: method == 'bakong',
                           onCheckPayment: () => paymentRepository.checkMd5(md5),
                         ),
                       ),
@@ -340,17 +345,22 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
                       if (!context.mounted) return;
 
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
+                        const SnackBar(
                           backgroundColor: Colors.red,
-                          content: const Text('Payment timeout or not completed'),
+                          content: Text('Payment not successful'),
                         ),
                       );
                       return;
                     }
 
                     transactionId = externalRef;
+                    paymentStatus = 'paid';
                   } else {
+                    if (!context.mounted) return;
+                    Navigator.of(context).pop();
+
                     transactionId = 'CASH-${DateTime.now().millisecondsSinceEpoch}';
+                    paymentStatus = 'pending';
                   }
 
                   final bookingResponse = await bookingRepository.createBooking(
@@ -394,7 +404,7 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
                       discountAmount: discountAmount,
                       finalAmount: totalAmount,
                       method: method,
-                      status: method == 'khqr' ? 'paid' : 'pending',
+                      status: paymentStatus,
                     ),
                   );
 
@@ -408,7 +418,11 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
 
                   if (!context.mounted) return;
 
-                  showSuccessBookingDialog(
+                  await Future.delayed(const Duration(milliseconds: 100));
+
+                  if (!context.mounted) return;
+
+                  await showSuccessBookingDialog(
                     context,
                     time: timeText,
                   );

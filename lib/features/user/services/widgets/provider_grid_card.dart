@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../service_provider_detail/provider_detail_screen.dart';
+import '../../../../routes/app_routes.dart';
 import '../providers/providers_page.dart';
-
 
 class ProviderGridCard extends StatelessWidget {
   final ProviderModel provider;
@@ -11,123 +10,132 @@ class ProviderGridCard extends StatelessWidget {
     required this.provider,
   });
 
+  void _openDetails(BuildContext context) {
+    Navigator.pushNamed(
+      context,
+      AppRoutes.serviceCard,
+      arguments: {
+        'nameType': provider.name,
+        'typeId': provider.typeId,
+        'currentIndex': provider.currentIndex,
+      },
+    );
+  }
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.3),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: AspectRatio(
-              aspectRatio: 1.2,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: provider.bgColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: _buildImage(),
-                ),
+        onTap: () => _openDetails(context),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: theme.dividerColor.withValues(alpha: 0.3),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-            ),
+            ],
           ),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(
-              provider.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-            child: Text(
-              provider.category,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium,
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.star,
-                      size: 14,
-                      color: theme.colorScheme.primary,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Image Section
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: AspectRatio(
+                  aspectRatio: 1.3,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: provider.bgColor,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      provider.rating.toString(),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: _buildImage(),
+                    ),
+                  ),
+                ),
+              ),
+
+              // 2. Text Section
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        provider.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        provider.category,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.textTheme.bodySmall?.color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // 3. Bottom Row
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: () => _openDetails(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'Details',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => _openDetails(context),
+                      icon: Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 18,
                         color: theme.colorScheme.primary,
                       ),
                     ),
                   ],
                 ),
-                InkWell(
-                  borderRadius: BorderRadius.circular(6),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ProviderDetailScreen(
-
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      'Details',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -139,7 +147,7 @@ class ProviderGridCard extends StatelessWidget {
       return _buildFallback();
     }
 
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    if (imageUrl.startsWith('http')) {
       return Image.network(
         imageUrl,
         fit: BoxFit.contain,
@@ -166,7 +174,7 @@ class ProviderGridCard extends StatelessWidget {
     return const Center(
       child: Icon(
         Icons.person,
-        size: 60,
+        size: 40,
         color: Colors.white70,
       ),
     );

@@ -23,7 +23,7 @@ class FloatingActionSection extends StatelessWidget {
       enableDrag: true,
       backgroundColor: theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       builder: (sheetContext) {
         bool isLoading = false;
@@ -33,18 +33,12 @@ class FloatingActionSection extends StatelessWidget {
           builder: (context, setModalState) {
             Future<void> handleTap(String method) async {
               if (isLoading) return;
-
               setModalState(() {
                 isLoading = true;
                 selectedMethod = method;
               });
-
               try {
                 await onPaymentSelected(method);
-
-                if (sheetContext.mounted) {
-                  Navigator.pop(sheetContext);
-                }
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -65,52 +59,65 @@ class FloatingActionSection extends StatelessWidget {
               canPop: !isLoading,
               child: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Center(
                         child: Container(
-                          width: 44,
-                          height: 5,
+                          width: 40,
+                          height: 4,
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.outlineVariant,
-                            borderRadius: BorderRadius.circular(999),
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 18),
-                      Text(
-                        'Choose payment method',
-                        style: theme.textTheme.titleLarge?.copyWith(
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Payment Method',
+                        style: TextStyle(
+                          fontSize: 20,
                           fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
                       Text(
-                        'Select how you want to pay for this booking.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                        'Choose your preferred way to pay',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
                       _PaymentMethodTile(
-                        icon: Icons.qr_code_2_rounded,
+                        image: 'assets/images/khqr-5.png',
                         title: 'KHQR Payment',
-                        subtitle: 'Pay now by scanning QR code',
+                        subtitle: 'Scan to pay with any bank app',
                         isLoading: isLoading && selectedMethod == 'khqr',
                         isDisabled: isLoading,
                         onTap: () => handleTap('khqr'),
+                        iconBgColor: const Color(0xFFE51D28), // Bakong Red
                       ),
-                      const SizedBox(height: 12),
+                      const Divider(height: 1, indent: 64),
                       _PaymentMethodTile(
-                        icon: Icons.payments_outlined,
+                        image: 'assets/images/bakong.png',
+                        title: 'Pay via Bakong App',
+                        subtitle: 'Direct payment from Bakong wallet',
+                        isLoading: isLoading && selectedMethod == 'bakong',
+                        isDisabled: isLoading,
+                        onTap: () => handleTap('bakong'),
+                        iconBgColor: const Color(0xFFE51D28),
+                      ),
+                      const Divider(height: 1, indent: 64),
+                      _PaymentMethodTile(
+                        icon: Icons.account_balance_wallet_outlined,
                         title: 'Cash Payment',
-                        subtitle: 'Pay later when service is completed',
+                        subtitle: 'Pay after service is done',
                         isLoading: isLoading && selectedMethod == 'cash',
                         isDisabled: isLoading,
                         onTap: () => handleTap('cash'),
+                        iconBgColor: Colors.grey[100]!,
+                        iconColor: Colors.black87,
                       ),
                     ],
                   ),
@@ -131,14 +138,12 @@ class FloatingActionSection extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 34),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(30),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 30,
-            offset: const Offset(0, -10),
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 20,
+            offset: const Offset(0, -8),
           ),
         ],
       ),
@@ -148,21 +153,26 @@ class FloatingActionSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Estimated Total", style: theme.textTheme.bodyMedium),
+              const Text(
+                'Estimated Total',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.grey),
+              ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   if (originalPrice != null)
                     Text(
-                      '\$${originalPrice!.toStringAsFixed(2)}/H',
-                      style: theme.textTheme.bodyMedium?.copyWith(
+                      '\$${originalPrice!.toStringAsFixed(2)}',
+                      style: const TextStyle(
                         decoration: TextDecoration.lineThrough,
-                        color: theme.colorScheme.outline,
+                        color: Colors.grey,
+                        fontSize: 14,
                       ),
                     ),
                   Text(
-                    '\$${totalPrice.toStringAsFixed(2)}/H',
-                    style: theme.textTheme.headlineSmall?.copyWith(
+                    '\$${totalPrice.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 24,
                       fontWeight: FontWeight.w900,
                       color: theme.colorScheme.primary,
                     ),
@@ -171,30 +181,21 @@ class FloatingActionSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
-            height: 56,
+            height: 58,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
-                foregroundColor: theme.colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 elevation: 0,
               ),
               onPressed: () => _showPaymentMethodSheet(context),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Confirm Booking",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(width: 12),
-                  Icon(Icons.arrow_forward_rounded, size: 20),
-                ],
+              child: const Text(
+                'Confirm Booking',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -205,92 +206,100 @@ class FloatingActionSection extends StatelessWidget {
 }
 
 class _PaymentMethodTile extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? image;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
   final bool isLoading;
   final bool isDisabled;
+  final Color iconBgColor;
+  final Color? iconColor;
 
   const _PaymentMethodTile({
-    required this.icon,
+    this.icon,
+    this.image,
     required this.title,
     required this.subtitle,
     required this.onTap,
     this.isLoading = false,
     this.isDisabled = false,
+    required this.iconBgColor,
+    this.iconColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Opacity(
-      opacity: isDisabled && !isLoading ? 0.6 : 1,
-      child: Material(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: isDisabled ? null : onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+      opacity: isDisabled && !isLoading ? 0.5 : 1,
+      child: InkWell(
+        onTap: isDisabled ? null : onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Row(
+            children: [
+              // --- ROUND IMAGE/ICON CONTAINER ---
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: iconBgColor,
+                ),
+                child: ClipOval(
                   child: isLoading
-                      ? Padding(
-                    padding: const EdgeInsets.all(12),
+                      ? const Padding(
+                    padding: EdgeInsets.all(12),
                     child: CircularProgressIndicator(
-                      strokeWidth: 2.4,
-                      color: theme.colorScheme.primary,
+                      strokeWidth: 2,
+                      color: Colors.white,
                     ),
                   )
-                      : Icon(icon, color: theme.colorScheme.primary),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+                      : image != null
+                      ? Image.asset(
+                    image!,
+                    fit: BoxFit.cover,
+                  )
+                      : Icon(
+                    icon,
+                    color: iconColor ?? Colors.black,
+                    size: 24,
                   ),
                 ),
-                isLoading
-                    ? SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.2,
-                    color: theme.colorScheme.primary,
-                  ),
-                )
-                    : Icon(
+              ),
+              const SizedBox(width: 16),
+              // --- TEXT SECTION ---
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF2D2D2D),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[500],
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!isLoading)
+                const Icon(
                   Icons.arrow_forward_ios_rounded,
-                  size: 16,
-                  color: theme.colorScheme.onSurfaceVariant,
+                  size: 14,
+                  color: Color(0xFFD1D1D1),
                 ),
-              ],
-            ),
+            ],
           ),
         ),
       ),

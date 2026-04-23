@@ -36,6 +36,7 @@ ProviderSubscription<AsyncValue<AuthModel?>> listenLogin(
                   'channel': auth.channel,
                   'message': auth.message,
                 },
+
               );
             }
             return;

@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
 
-void showSuccessBookingDialog(BuildContext context, {required String time}) {
+Future<void> showSuccessBookingDialog(
+    BuildContext context, {
+      required String time,
+    }) async {
   final theme = Theme.of(context);
   final colorScheme = theme.colorScheme;
+  final navigator = Navigator.of(context, rootNavigator: true);
 
-  showDialog(
+  await showDialog<void>(
     context: context,
-    barrierDismissible: false, // user must click button to close
-    builder: (context) {
+    useRootNavigator: true,
+    barrierDismissible: false,
+    builder: (dialogContext) {
       return Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(25),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 1. SUCCESS ICON
               Container(
                 height: 100,
                 width: 100,
@@ -30,20 +36,16 @@ void showSuccessBookingDialog(BuildContext context, {required String time}) {
                 ),
               ),
               const SizedBox(height: 25),
-
-              // 2. TITLE
               Text(
-                "Order Received!",
+                'Order Received!',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 15),
-
-              // 3. MESSAGE
               Text(
-                "Your order for booking the Plumber has been received. The Plumber will arrive at $time.",
+                'Your order for booking the Plumber has been received. The Plumber will arrive at $time.',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colorScheme.outline,
@@ -51,8 +53,6 @@ void showSuccessBookingDialog(BuildContext context, {required String time}) {
                 ),
               ),
               const SizedBox(height: 30),
-
-              // 4. ACTION BUTTON
               SizedBox(
                 width: double.infinity,
                 height: 55,
@@ -66,25 +66,28 @@ void showSuccessBookingDialog(BuildContext context, {required String time}) {
                     elevation: 0,
                   ),
                   onPressed: () {
-                    // Navigate back to Home or My Bookings
-                    Navigator.of(context).popUntil((route) => route.isFirst);
+                    navigator.popUntil((route) => route.isFirst);
                   },
                   child: const Text(
-                    "Back to Home",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    'Back to Home',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
-
-              // 5. SECONDARY ACTION
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context); // Close dialog
-                  // Logic to go to "My Orders" screen
+                  Navigator.of(dialogContext).pop();
+                  // Navigate to booking details here if needed
                 },
                 child: Text(
-                  "View Booking Details",
-                  style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w600),
+                  'View Booking Details',
+                  style: TextStyle(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],

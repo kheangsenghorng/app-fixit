@@ -1,3 +1,4 @@
+
 import 'package:fixit/features/user/search/widgets/filter_sheet.dart';
 import 'package:fixit/features/user/services/widgets/provider_grid_card.dart';
 import 'package:fixit/widgets/main_bottom_nav.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../../core/models/type_model.dart';
 import '../../../../core/provider/type_listener_provider.dart';
+import '../../main_screen.dart';
 import '../../search/data/providers/types_provider.dart';
 
 class ProvidersPage extends ConsumerStatefulWidget {
@@ -27,6 +29,8 @@ class ProvidersPage extends ConsumerStatefulWidget {
 }
 
 class _ProvidersPageState extends ConsumerState<ProvidersPage> {
+  String selectedType = 'All';
+
   @override
   void initState() {
     super.initState();
@@ -60,12 +64,20 @@ class _ProvidersPageState extends ConsumerState<ProvidersPage> {
     }
 
     ref.watch(typeListenerProvider);
-
     final state = ref.watch(typeProvider);
 
-    final filteredTypes = state.types
+    final categoryTypes = state.types
         .where((type) => type.category?.id == widget.categoryId)
         .toList();
+
+    final typeNames = [
+      'All',
+      ...categoryTypes.map((e) => e.name).toSet().toList(),
+    ];
+
+    final filteredTypes = selectedType == 'All'
+        ? categoryTypes
+        : categoryTypes.where((type) => type.name == selectedType).toList();
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -94,13 +106,13 @@ class _ProvidersPageState extends ConsumerState<ProvidersPage> {
       ),
       body: Builder(
         builder: (_) {
-          if (state.isLoading && filteredTypes.isEmpty) {
+          if (state.isLoading && categoryTypes.isEmpty) {
             return const Center(
               child: CircularProgressIndicator(),
             );
           }
 
-          if (state.error != null && filteredTypes.isEmpty) {
+          if (state.error != null && categoryTypes.isEmpty) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -112,7 +124,7 @@ class _ProvidersPageState extends ConsumerState<ProvidersPage> {
             );
           }
 
-          if (filteredTypes.isEmpty) {
+          if (categoryTypes.isEmpty) {
             return const Center(
               child: Text('No providers found'),
             );
@@ -130,35 +142,95 @@ class _ProvidersPageState extends ConsumerState<ProvidersPage> {
           )
               .toList();
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              await ref.read(typeProvider.notifier).refresh();
-            },
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 0.68,
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  children: typeNames.map((name) {
+                    final isSelected = selectedType == name;
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ChoiceChip(
+                        label: Text(name),
+                        selected: isSelected,
+                        onSelected: (_) {
+                          setState(() {
+                            selectedType = name;
+                          });
+                        },
+                        selectedColor: theme.colorScheme.primary,
+                        backgroundColor:
+                        theme.colorScheme.surfaceVariant.withValues(alpha: 0.3),
+                        showCheckmark: false,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? Colors.white
+                              : theme.colorScheme.onSurface,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
-              itemCount: providers.length,
-              itemBuilder: (_, index) =>
-                  ProviderGridCard(provider: providers[index]),
-            ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: filteredTypes.isEmpty
+                    ? const Center(
+                  child: Text('No services found for this type'),
+                )
+                    : RefreshIndicator(
+                  onRefresh: () async {
+                    await ref.read(typeProvider.notifier).refresh();
+                  },
+                  child: GridView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.68,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    itemCount: providers.length,
+                    itemBuilder: (_, index) =>
+                        ProviderGridCard(provider: providers[index]),
+                  ),
+                ),
+              ),
+            ],
           );
         },
       ),
-      bottomNavigationBar: (widget.currentIndex != null &&
-          widget.onNavTap != null)
-          ? MainBottomNav(
+      bottomNavigationBar: widget.currentIndex == null
+          ? null
+          : MainBottomNav(
         currentIndex: widget.currentIndex!,
         onTap: (index) {
-          widget.onNavTap!(index);
-          Navigator.popUntil(context, (route) => route.isFirst);
+          if (widget.onNavTap != null) {
+            widget.onNavTap!(index);
+            return;
+          }
+
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MainScreen(currentIndex: index),
+            ),
+                (route) => false,
+          );
         },
-      )
-          : null,
+      ),
     );
   }
 
@@ -177,6 +249,8 @@ class _ProvidersPageState extends ConsumerState<ProvidersPage> {
     ];
 
     return ProviderModel(
+      typeId: type.id,
+      currentIndex: widget.currentIndex,
       name: type.name,
       category: type.category?.name ?? serviceName,
       rating: 4.5,
@@ -187,6 +261,8 @@ class _ProvidersPageState extends ConsumerState<ProvidersPage> {
 }
 
 class ProviderModel {
+  final int? typeId;
+  final int? currentIndex;
   final String name;
   final String category;
   final double rating;
@@ -194,6 +270,8 @@ class ProviderModel {
   final String? imageUrl;
 
   ProviderModel({
+    required this.typeId,
+    required this.currentIndex,
     required this.name,
     required this.category,
     required this.rating,
