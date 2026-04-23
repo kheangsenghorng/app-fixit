@@ -52,9 +52,7 @@ class HomeCategoryList extends ConsumerWidget {
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () {
-                    ref
-                        .read(categoryNotifierProvider.notifier)
-                        .refreshCategories();
+                    ref.read(categoryNotifierProvider.notifier).refreshCategories();
                   },
                   child: const Text('Retry'),
                 ),
@@ -87,16 +85,14 @@ class HomeCategoryList extends ConsumerWidget {
         return CategoryCard(
           title: item.name,
           image: item.icon,
-          icon: (item.icon.isEmpty)
-              ? Icons.category
-              : null,
+          icon: item.icon.isEmpty ? Icons.category : null,
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => ProvidersPage(
                   serviceName: item.name,
-                  categoryId:item.id,
+                  categoryId: item.id,
                   currentIndex: currentIndex,
                 ),
               ),

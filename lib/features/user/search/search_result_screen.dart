@@ -8,6 +8,7 @@ import '../../../core/models/type_model.dart';
 import '../../../core/provider/type_listener_provider.dart';
 import './get_service_screen/get_service_screen.dart';
 import 'data/providers/types_provider.dart';
+import 'filled_search/filled_search_page.dart';
 import 'widgets/filter_sheet.dart';
 import 'widgets/provider_card.dart';
 
@@ -43,6 +44,14 @@ class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
     if (position.pixels >= position.maxScrollExtent - 200) {
       ref.read(typeProvider.notifier).fetchActiveTypes(loadMore: true);
     }
+  }
+  void _openFilledSearchPage(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const FilledSearchPage(),
+      ),
+    );
   }
 
   @override
@@ -80,6 +89,7 @@ class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
         ? Colors.white.withValues(alpha: 0.1)
         : Colors.black.withValues(alpha: 0.05);
     final activeColor = theme.colorScheme.primary;
+
 
     return Scaffold(
       backgroundColor: scaffoldBg,
@@ -229,9 +239,11 @@ class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
                               final item = filteredTypes[index];
 
                               return ProviderCard(
+                                typeId: item.id,
                                 name: item.name,
                                 job: item.category?.name ?? '',
                                 imageUrl: item.icon,
+                                currentIndex: 1,
                               );
                             },
                           ),
@@ -252,48 +264,53 @@ class _SearchResultScreenState extends ConsumerState<SearchResultScreen> {
             top: 50,
             left: 16,
             right: 16,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(35),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                child: Container(
-                  height: 60,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: glassColor,
-                    borderRadius: BorderRadius.circular(35),
-                    border: Border.all(color: borderColor),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          style: TextStyle(
-                            color: contentColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: widget.query ?? 'Search services...',
-                            hintStyle: TextStyle(
-                              color: contentColor.withValues(alpha: 0.3),
-                              fontSize: 15,
+            child: GestureDetector(
+              onTap: () => _openFilledSearchPage(context),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(35),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                  child: Container(
+                    height: 60,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: glassColor,
+                      borderRadius: BorderRadius.circular(35),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: IgnorePointer(
+                            child: TextField(
+                              style: TextStyle(
+                                color: contentColor,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: widget.query ?? 'Search services...',
+                                hintStyle: TextStyle(
+                                  color: contentColor.withValues(alpha: 0.3),
+                                  fontSize: 15,
+                                ),
+                                border: InputBorder.none,
+                              ),
                             ),
-                            border: InputBorder.none,
                           ),
                         ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.tune_rounded, color: activeColor),
-                        onPressed: () {
-                          showModalBottomSheet(
-                            context: context,
-                            backgroundColor: Colors.transparent,
-                            isScrollControlled: true,
-                            builder: (_) => const FilterSheet(),
-                          );
-                        },
-                      ),
-                    ],
+                        IconButton(
+                          icon: Icon(Icons.tune_rounded, color: activeColor),
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              backgroundColor: Colors.transparent,
+                              isScrollControlled: true,
+                              builder: (_) => const FilterSheet(),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

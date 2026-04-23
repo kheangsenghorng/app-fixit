@@ -9,10 +9,11 @@ import '../../providers/auth_controller.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
   final String phone;
-
+  final bool returnResult;
   const OtpScreen({
     super.key,
     required this.phone,
+    this.returnResult = false,
   });
 
   @override
@@ -43,11 +44,16 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           if (!auth.isLoggedIn) return;
 
           _handledSuccess = true;
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/main',
-                (route) => false,
-          );
+
+          if (widget.returnResult) {
+            Navigator.pop(context, true);
+          } else {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/main',
+                  (route) => false,
+            );
+          }
         },
         error: (err, _) {
           ScaffoldMessenger.of(context).showSnackBar(

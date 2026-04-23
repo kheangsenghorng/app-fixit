@@ -34,6 +34,7 @@ class ApiEndpoints {
   static String bookingService = "/customer/service-bookings";
 
   static String coupons = "/v1/coupons/show-apply";
+
   static String couponUsage = "/v1/coupon-usages";
 
   static String payment = "/customer/payments";
@@ -43,4 +44,8 @@ class ApiEndpoints {
   static String checkMd5 = "/payments/khqr/check-md5";
 
   static String downloadQRcode = "/payments/download-qr";
+
+  static String paymentsHistory = "/customer/service-bookings/user";
+
+  static String searchActiveServices = "/service/search-active-services";
 }

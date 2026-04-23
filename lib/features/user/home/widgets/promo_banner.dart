@@ -1,9 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:fixit/features/user/search/search_result_screen.dart';
-// Note: Ensure your helper methods buildBlueCard and buildSearchBar are accessible
-import 'build_blue_card.dart'; 
-import 'build_search_bar.dart'; 
+import '../../search/filled_search/filled_search_page.dart';
+import 'build_blue_card.dart';
+import 'build_search_bar.dart';
 
 class PromoBanner extends StatelessWidget {
   final VoidCallback onSearchTap;
@@ -27,16 +27,26 @@ class PromoBanner extends StatelessWidget {
     this.onNavTap,
   });
 
+  void _openFilledSearchPage(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FilledSearchPage(
+
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // GLASS LOGIC
-    final glassColor = isDark 
-        ? const Color(0xFF1A1A1A).withValues(alpha: 0.8) 
+    final glassColor = isDark
+        ? const Color(0xFF1A1A1A).withValues(alpha: 0.8)
         : Colors.white.withValues(alpha: 0.8);
-    final borderColor = isDark 
-        ? Colors.white.withValues(alpha: 0.1) 
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
         : Colors.black.withValues(alpha: 0.05);
 
     return Column(
@@ -45,38 +55,41 @@ class PromoBanner extends StatelessWidget {
           clipBehavior: Clip.none,
           alignment: Alignment.bottomCenter,
           children: [
-            // 1. Branding Card
             buildBlueCard(),
 
-            // 2. FLOATING GLASS SEARCH BAR
             Positioned(
               bottom: -28,
               left: 12,
               right: 12,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(35),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                  child: Container(
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: glassColor,
-                      borderRadius: BorderRadius.circular(35),
-                      border: Border.all(color: borderColor),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                        )
-                      ],
-                    ),
-                   child: buildSearchBar(
-                      context: context, 
-                      controller: controller,
-                      focusNode: focusNode,
-                      isSearching: isSearching,
-                      onSearchTap: onSearchTap,
-                      onClear: onClear,
+              child: GestureDetector(
+                onTap: () => _openFilledSearchPage(context),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(35),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: glassColor,
+                        borderRadius: BorderRadius.circular(35),
+                        border: Border.all(color: borderColor),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: IgnorePointer(
+                        child: buildSearchBar(
+                          context: context,
+                          controller: controller,
+                          focusNode: focusNode,
+                          isSearching: isSearching,
+                          onSearchTap: onSearchTap,
+                          onClear: onClear,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -84,8 +97,6 @@ class PromoBanner extends StatelessWidget {
             ),
           ],
         ),
-
-        // 3. SEARCH SUGGESTIONS (CLEAN CARD)
         if (isSearching && controller.text.isNotEmpty) ...[
           const SizedBox(height: 50),
           _SearchSuggestionsOverlay(
@@ -118,12 +129,13 @@ class _SearchSuggestionsOverlay extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        // SOLID BG (NO BORDER)
         color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.white.withValues(alpha: 0.01) : Colors.black.withValues(alpha: 0.03),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.01)
+                : Colors.black.withValues(alpha: 0.03),
             blurRadius: 20,
           )
         ],
@@ -138,8 +150,8 @@ class _SearchSuggestionsOverlay extends StatelessWidget {
                 Text(
                   "Recent Searches",
                   style: TextStyle(
-                    fontWeight: FontWeight.w900, 
-                    color: contentColor, 
+                    fontWeight: FontWeight.w900,
+                    color: contentColor,
                     fontSize: 14,
                     letterSpacing: 0.2,
                   ),
@@ -173,25 +185,26 @@ class _SearchSuggestionsOverlay extends StatelessWidget {
                 return ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                   leading: Icon(
-                    Icons.history_rounded, 
-                    color: contentColor.withValues(alpha: 0.3), 
-                    size: 20
+                    Icons.history_rounded,
+                    color: contentColor.withValues(alpha: 0.3),
+                    size: 20,
                   ),
                   title: Text(
                     item['title'] ?? '',
                     style: TextStyle(
-                      fontSize: 15, 
-                      fontWeight: FontWeight.w500, 
-                      color: contentColor
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: contentColor,
                     ),
                   ),
                   onTap: () {
                     FocusScope.of(context).unfocus();
                     Navigator.push(
-                      context, 
+                      context,
                       MaterialPageRoute(
-                        builder: (_) => SearchResultScreen(query: item['title']!)
-                      )
+                        builder: (_) =>
+                            SearchResultScreen(query: item['title']!),
+                      ),
                     );
                   },
                 );

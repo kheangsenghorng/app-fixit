@@ -31,7 +31,7 @@ class Owner {
   final double lng;
   final String mapUrl;
   final List<OwnerImage> images;
-  final String logo;
+  final String? logo;
   final String status;
 
   Owner({

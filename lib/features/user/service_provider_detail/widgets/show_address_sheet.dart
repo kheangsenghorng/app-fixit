@@ -283,8 +283,9 @@ void showAddressSheet(
                         onPressed: () async {
                           if (!formKey.currentState!.validate()) return;
 
-                          var token = await TokenStorage.get();
+                          String? token = await TokenStorage.get();
 
+                          // If not logged in, show login sheet
                           if (token == null || token.isEmpty) {
                             final loginSuccess = await showModalBottomSheet<bool>(
                               context: context,
@@ -301,7 +302,7 @@ void showAddressSheet(
 
                           if (!context.mounted) return;
 
-                          Navigator.pop(context);
+                          // Go to review summary without popping current screen
                           Navigator.of(context, rootNavigator: true).pushNamed(
                             AppRoutes.reviewSummary,
                             arguments: {

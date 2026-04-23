@@ -41,36 +41,28 @@ class _ServiceCardState extends ConsumerState<ServiceCard> {
   @override
   Widget build(BuildContext context) {
     final servicesAsync = ref.watch(serviceNotifierProvider);
+    final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final bool isTablet = size.width > 600;
-    final bool isLargeTablet = size.width > 900;
 
-    // Responsive Column Logic
-    int crossAxisCount = 2;
-    if (isLargeTablet) {
-      crossAxisCount = 4;
-    } else if (isTablet) {
-      crossAxisCount = 3;
-    }
+    int crossAxisCount = isTablet ? (size.width > 900 ? 4 : 3) : 2;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        toolbarHeight: isTablet ? 80 : 60, // Taller AppBar for iPad
-        title: Text(
-          widget.nameType,
-          style: TextStyle(
-            color: const Color(0xFF1E293B),
-            fontWeight: FontWeight.w800,
-            fontSize: isTablet ? 24 : 20,
-          ),
-        ),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Colors.black),
           onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          widget.nameType,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF1E293B),
+          ),
         ),
       ),
       body: RefreshIndicator(
@@ -82,20 +74,16 @@ class _ServiceCardState extends ConsumerState<ServiceCard> {
             if (services.isEmpty) return _buildEmptyState();
 
             return GridView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.symmetric(
-                  horizontal: isTablet ? 32 : 16,
-                  vertical: 20
-              ),
+              padding: EdgeInsets.all(isTablet ? 24 : 16),
               itemCount: services.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20,
-                // Adjusting ratio so cards don't get too long on iPad
-                childAspectRatio: isTablet ? 0.75 : 0.62,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                // Adjusted ratio to ensure "View Detail" button doesn't overflow
+                childAspectRatio: isTablet ? 0.72 : 0.64,
               ),
-              itemBuilder: (context, index) => _buildServiceItem(context, services[index], isTablet),
+              itemBuilder: (context, index) => _buildServiceItem(context, services[index], isTablet, theme),
             );
           },
         ),
@@ -117,17 +105,18 @@ class _ServiceCardState extends ConsumerState<ServiceCard> {
     );
   }
 
-  Widget _buildServiceItem(BuildContext context, Service item, bool isTablet) {
+  Widget _buildServiceItem(BuildContext context, Service item, bool isTablet, ThemeData theme) {
     final imageUrl = item.images.isNotEmpty ? item.images.first.url : null;
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
@@ -135,74 +124,74 @@ class _ServiceCardState extends ConsumerState<ServiceCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image Section
-          Expanded(
-            flex: 5,
-            child: Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                  child: imageUrl != null
-                      ? Image.network(imageUrl, width: double.infinity, fit: BoxFit.cover)
-                      : Container(color: Colors.blueGrey[50]),
-                ),
-                Positioned(
-                  top: 10,
-                  left: 10,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blueAccent,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      item.category.name.toUpperCase(),
-                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+          // 1. IMAGE SECTION
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: AspectRatio(
+              aspectRatio: 1.3,
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: imageUrl != null
+                        ? Image.network(imageUrl, width: double.infinity, height: double.infinity, fit: BoxFit.cover)
+                        : Container(color: theme.colorScheme.surfaceVariant),
+                  ),
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        item.category.name.toUpperCase(),
+                        style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
-          // Content Section
+          // 2. CONTENT SECTION
           Expanded(
-            flex: 6,
             child: Padding(
-              padding: EdgeInsets.all(isTablet ? 16 : 12),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     item.title,
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: isTablet ? 16 : 14,
-                        height: 1.2
-                    ),
+                    style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, height: 1.1),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
 
-                  // Provider
+                  // Provider Info
                   Row(
                     children: [
                       CircleAvatar(
-                        radius: 10,
+                        radius: 9,
                         backgroundImage: (item.owner.logo != null) ? NetworkImage(item.owner.logo!) : null,
-                        child: item.owner.logo == null ? const Icon(Icons.person, size: 12) : null,
+                        child: item.owner.logo == null ? const Icon(Icons.person, size: 10) : null,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           item.owner.businessName,
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                           maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
+
                   const Spacer(),
 
                   // Price and Duration
@@ -212,41 +201,42 @@ class _ServiceCardState extends ConsumerState<ServiceCard> {
                       Text(
                         "\$${item.basePrice}",
                         style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: isTablet ? 18 : 16,
-                            color: Colors.blueAccent
+                          fontWeight: FontWeight.w900,
+                          fontSize: isTablet ? 18 : 15,
+                          color: theme.colorScheme.primary,
                         ),
                       ),
                       Row(
                         children: [
-                          const Icon(Icons.timer_outlined, size: 14, color: Colors.grey),
-                          const SizedBox(width: 4),
+                          Icon(Icons.timer_outlined, size: 12, color: Colors.grey[500]),
+                          const SizedBox(width: 2),
                           Text(
-                              "${item.duration}m",
-                              style: const TextStyle(fontSize: 12, color: Colors.grey)
+                            "${item.duration}m",
+                            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                           ),
                         ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
                   // Action Button
-                  // 3. ACTION BUTTON (VIEW DETAIL)
                   SizedBox(
                     width: double.infinity,
-                    height: 45,
+                    height: 38,
                     child: ElevatedButton(
                       onPressed: () => Navigator.pushNamed(context, AppRoutes.providerDetail, arguments: item.id),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1C2738), // Dark Navy matching your image
+                        backgroundColor: const Color(0xFF1C2738),
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
-                      child: const Text('View Detail', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text('View Detail', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                     ),
                   ),
+                  const SizedBox(height: 10),
                 ],
               ),
             ),
@@ -261,8 +251,9 @@ class _ServiceCardState extends ConsumerState<ServiceCard> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.layers_clear_outlined, size: 100, color: Colors.grey[300]),
-          const Text("No services found", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+          Icon(Icons.layers_clear_outlined, size: 80, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          const Text("No services found", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey)),
         ],
       ),
     );
