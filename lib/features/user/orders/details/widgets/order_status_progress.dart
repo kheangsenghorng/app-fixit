@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 class OrderStatusProgress extends StatelessWidget {
-  final double progress; // Value between 0.0 and 1.0
+  final double progress;
+  final Color? color;
 
   const OrderStatusProgress({
     super.key,
     required this.progress,
+    this.color,
   });
 
   @override
@@ -17,9 +19,8 @@ class OrderStatusProgress extends StatelessWidget {
       child: LinearProgressIndicator(
         value: progress,
         backgroundColor: colorScheme.surfaceContainerHighest,
-        color: colorScheme.primary,
+        color: color ?? colorScheme.primary,
         minHeight: 6,
-        // Optional: Add rounded corners to the bar
         borderRadius: BorderRadius.circular(10),
       ),
     );

@@ -1,31 +1,44 @@
 import 'package:flutter/material.dart';
 
+import '../../data/model/user_service_bookings_response.dart';
 import 'order_info_detail_row.dart';
 import 'order_section_card.dart';
 
 class ServiceDetailsCard extends StatelessWidget {
-  const ServiceDetailsCard({super.key});
+  final ServiceBooking booking;
+
+  const ServiceDetailsCard({
+    super.key,
+    required this.booking,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return const OrderSectionCard(
+    final serviceName = booking.service?.name ?? 'N/A';
+    final bookingDate = booking.bookingDate ?? 'N/A';
+    final bookingHours = booking.bookingHours ?? '';
+    final address = booking.address ?? 'N/A';
+
+    return OrderSectionCard(
       title: "Order Details",
       child: Column(
         children: [
           OrderInfoDetailRow(
             icon: Icons.handyman_outlined,
             label: "Service",
-            value: "Kitchen Pipe Repair",
+            value: serviceName,
           ),
           OrderInfoDetailRow(
             icon: Icons.calendar_today,
             label: "Schedule",
-            value: "Dec 07, 2023 | 10:00 AM",
+            value: bookingHours.isNotEmpty
+                ? "$bookingDate | $bookingHours"
+                : bookingDate,
           ),
           OrderInfoDetailRow(
             icon: Icons.location_on_outlined,
             label: "Location",
-            value: "123 Green Street, NY",
+            value: address,
           ),
         ],
       ),
