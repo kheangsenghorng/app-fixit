@@ -3,15 +3,13 @@ import 'package:fixit/features/user/orders/details/widgets/status_header.dart';
 import 'package:fixit/features/user/orders/details/widgets/status_icon_box.dart';
 import 'package:flutter/material.dart';
 
-
-
 class OrderStatusRow extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final String label;
   final String status;
-  final String actionLabel;
-  final VoidCallback onPressed;
+  final String? actionLabel;
+  final VoidCallback? onPressed;
 
   const OrderStatusRow({
     super.key,
@@ -19,8 +17,8 @@ class OrderStatusRow extends StatelessWidget {
     required this.iconColor,
     required this.label,
     required this.status,
-    required this.actionLabel,
-    required this.onPressed,
+    this.actionLabel,
+    this.onPressed,
   });
 
   @override
@@ -32,14 +30,19 @@ class OrderStatusRow extends StatelessWidget {
           color: iconColor,
         ),
         const SizedBox(width: 15),
+
         StatusHeader(
           label: label,
           status: status,
         ),
-        OrderActionButton(
-          label: actionLabel,
-          onPressed: onPressed,
-        ),
+
+        if (actionLabel != null && onPressed != null) ...[
+          const SizedBox(width: 8),
+          OrderActionButton(
+            label: actionLabel!,
+            onPressed: onPressed!,
+          ),
+        ],
       ],
     );
   }

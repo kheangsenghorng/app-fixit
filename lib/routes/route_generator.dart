@@ -50,7 +50,14 @@ class RouteGenerator {
     // 🛠 Service & Bookings
       case AppRoutes.providerDetail: return buildRoute(const ProviderDetailScreen());
       case AppRoutes.reviewSummary: return buildRoute(const ReviewSummaryScreen());
-      case AppRoutes.orderDetails: return buildRoute(const OrderDetailsScreen());
+      case AppRoutes.orderDetails:
+        final bookingId = settings.arguments as int;
+
+        return buildRoute(
+          OrderDetailsScreen(
+            bookingId: bookingId,
+          ),
+        );
       case AppRoutes.serviceCard:
         final args = settings.arguments as Map<String, dynamic>;
 

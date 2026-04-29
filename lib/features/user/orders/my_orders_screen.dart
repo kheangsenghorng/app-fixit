@@ -108,7 +108,7 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "My Orders",
+                        "My Booking",
                         style: TextStyle(
                           color: contentColor,
                           fontWeight: FontWeight.w900,

@@ -47,5 +47,17 @@ class ApiEndpoints {
 
   static String paymentsHistory = "/customer/service-bookings/user";
 
+  static String serviceBookings = "/customer/service-bookings";
+
+  static String serviceBookingByBooking(int bookingId){
+      return "$serviceBookings/$bookingId";
+  }
   static String searchActiveServices = "/service/search-active-services";
+
+  static const String serviceBookingProviders =
+      "/customer/service-booking-providers";
+
+  static String serviceBookingProvidersByBooking(int bookingId) {
+    return "$serviceBookingProviders/booking/$bookingId";
+  }
 }

@@ -1,35 +1,42 @@
 import 'package:flutter/material.dart';
+import '../../widgets/booking_status_info.dart';
 import 'order_glass_card.dart';
 import 'order_status_progress.dart';
 import 'order_status_row.dart';
 
-// --- 1. Status Card Section ---
 class OrderStatusCard extends StatelessWidget {
+  final String bookingStatus;
   final VoidCallback onViewMap;
 
-  const OrderStatusCard({super.key, required this.onViewMap});
+  const OrderStatusCard({
+    super.key,
+    required this.bookingStatus,
+    required this.onViewMap,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final statusInfo = BookingStatusInfo.fromStatus(bookingStatus);
+
 
     return OrderGlassCard(
       child: Column(
         children: [
-          // The Row we refactored earlier
           OrderStatusRow(
-            icon: Icons.query_stats,
-            iconColor: Colors.blue,
+            icon: statusInfo.icon,
+            iconColor: statusInfo.color,
             label: "Current Status",
-            status: "Technician is on the way",
-            actionLabel: "View Map",
-            onPressed: onViewMap,
+            status: statusInfo.label,
+            actionLabel: statusInfo.showMap ? "View Map" : null,
+            onPressed: statusInfo.showMap ? onViewMap : null,
           ),
-          // The Progress Bar we just extracted
-          const OrderStatusProgress(progress: 0.7),
+          OrderStatusProgress(
+            progress: statusInfo.progress,
+            color: statusInfo.color,
+          ),
         ],
       ),
     );
   }
 }
-
 

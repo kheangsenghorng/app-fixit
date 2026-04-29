@@ -145,7 +145,9 @@ class OrderListView extends ConsumerWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const OrderDetailsScreen(),
+                builder: (_) =>  OrderDetailsScreen(
+                  bookingId: booking.id,
+                ),
               ),
             ),
             onActionPressed: _getActionButtonText(selectedTab, payment, booking) == null
