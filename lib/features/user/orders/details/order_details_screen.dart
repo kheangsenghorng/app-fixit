@@ -87,6 +87,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                   final booking = response.data;
 
                   return OrderStatusCard(
+                    //block booking status tracking
                     bookingStatus: booking.bookingStatus ?? 'pending',
                     onViewMap: () => _showTrackingTimeline(
                       context,
@@ -140,6 +141,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                     children: providers.map((provider) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
+                        //block display provider
                         child: OrderProviderCard(
                           bookingProvider: provider,
                         ),
@@ -154,7 +156,7 @@ class OrderDetailsScreen extends ConsumerWidget {
                 error: (error, stackTrace) => const SizedBox.shrink(),
                 data: (response) {
                   final booking = response.data;
-
+                  // details services booking
                   return ServiceDetailsCard(
                     booking: booking,
                   );
@@ -162,6 +164,7 @@ class OrderDetailsScreen extends ConsumerWidget {
               ),
 
               if (booking != null)
+              // details payment
                 OrderPaymentSummary(
                   booking: booking,
                 ),
