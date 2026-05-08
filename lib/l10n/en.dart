@@ -24,7 +24,7 @@ const Map<String, String> en = {
   'nav_search': 'Search',
   'nav_city': 'City',
   'nav_order': 'Order',
-  'nav_settings': 'Settings',
+  'nav_wallet': 'Wallet',
   'nav_profile': 'Profile',
   'logout_title': 'Logout',
   "already_have_account": "Already have an account?",

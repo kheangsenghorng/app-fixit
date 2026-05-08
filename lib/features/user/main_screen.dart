@@ -38,7 +38,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void _handleNavTap(int index, {bool pop = false}) {
-    final requiresLogin = index == 2 || index == 4;
+    final requiresLogin = index == 2 || index == 4 || index == 3;
 
     // ✅ ref.read is correct inside callbacks/methods
     final authState = ref.read(authControllerProvider);
@@ -80,7 +80,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       ),
       const SearchResultScreen(),
       const MyOrdersScreen(),
-      const SettingsScreen(),
+      const WalletScreen(),
       const ProfileScreen(),
     ];
 

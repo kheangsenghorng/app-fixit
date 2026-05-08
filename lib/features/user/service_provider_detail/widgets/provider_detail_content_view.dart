@@ -1,22 +1,39 @@
 import 'package:flutter/material.dart';
+import 'service_price_card.dart';
+import 'service_info_tile.dart';
 
-class ProviderDetailContentView extends StatelessWidget {
+class ProviderDetailContentView extends StatefulWidget {
   final dynamic service;
 
   const ProviderDetailContentView({super.key, required this.service});
 
-  // Convert minutes (663) to "11h 3m"
-  String _formatDuration(int mins) {
-    int hours = mins ~/ 60;
-    int remainingMins = mins % 60;
-    return hours > 0 ? '${hours}h ${remainingMins}m' : '${remainingMins}m';
-  }
+  @override
+  State<ProviderDetailContentView> createState() => _ProviderDetailContentViewState();
+}
+
+class _ProviderDetailContentViewState extends State<ProviderDetailContentView> {
+  int selectedVariantIndex = -1;
+
+  // Mock data for variants
+  final List<Map<String, dynamic>> serviceVariants = [
+    {'title': '1HP - 1.5HP', 'duration': '1 hour', 'techs': '2 Technicians', 'price': '10'},
+    {'title': '2HP', 'duration': '1 hour', 'techs': '2 Technicians', 'price': '15'},
+    {
+      "title": "Package",
+      "min_area_m2": 70,
+      "max_area_m2": 100,
+      "floor_number": 1,
+      "bedrooms": 6,
+      "duration": "4 hours",
+      "techs": "2 Cleaners",
+      "price": "50",
+    }
+  ];
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final owner = service.owner;
 
     return SliverToBoxAdapter(
       child: Container(
@@ -32,38 +49,24 @@ class ProviderDetailContentView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.1),
+                color: colorScheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                service.category.name.toUpperCase(),
+                widget.service.category.name.toUpperCase(),
                 style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 12),
               ),
             ),
             const SizedBox(height: 12),
 
-            // Title and Price
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    service.title,
-                    style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Text(
-                  "\$${service.basePrice}",
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            // Title
+            Text(
+              widget.service.title,
+              style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
 
-            // Duration and Rating Info Card
+            // Rating/Type Info Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -73,64 +76,161 @@ class ProviderDetailContentView extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildStat(Icons.timer_outlined, "Duration", _formatDuration(service.duration)),
                   _buildStat(Icons.star, "Rating", "4.8"),
-                  _buildStat(Icons.work_outline, "Type", service.type.name),
+                  _buildStat(Icons.work_outline, "Type", widget.service.type.name),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
 
-            // About Section
-            const Text("Description", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Text(
-              service.description,
-              style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey[700], height: 1.5),
+            const SizedBox(height: 24),
+            const Text("Service Pricing", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+
+            // Selectable Price Cards
+            ...List.generate(serviceVariants.length, (index) {
+              final variant = serviceVariants[index];
+              return ServicePriceCard(
+                title: variant['title'],
+                duration: variant['duration'],
+                technicians: variant['techs'],
+                price: variant['price']?.toString(),
+                minArea: variant['min_area_m2'],
+                maxArea: variant['max_area_m2'],
+                bedrooms: variant['bedrooms'],
+                floorNumber: variant['floor_number'],
+                isSelected: selectedVariantIndex == index,
+                onTap: () => setState(() => selectedVariantIndex = index),
+                onInfoPressed: () => _showTaskInfoSheet(context),
+              );
+            }),
+
+            const SizedBox(height: 16),
+
+            // INFO TILES
+            ServiceInfoTile(
+              icon: Icons.assignment_outlined,
+              title: "Task Information",
+              onTap: () => _showTaskInfoSheet(context),
+            ),
+            const Divider(height: 1),
+            ServiceInfoTile(
+              icon: Icons.fact_check_outlined,
+              title: "What's included",
+              onTap: () => _showWhatsIncludedSheet(context),
             ),
             const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
 
-            // Owner/Business Section
-            const Text("Service Provider", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                CircleAvatar(radius: 25, backgroundImage: NetworkImage(owner.logo)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(owner.businessName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text(owner.address, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.grey)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
+  // --- 1. TASK INFORMATION SHEET (CATEGORY SELECTOR) ---
+  void _showTaskInfoSheet(BuildContext context) {
+    String selectedCat = "Kitchen";
+    final List<String> cats = ["Kitchen", "Bathroom", "Living room"];
+    final Map<String, List<String>> tasks = {
+      "Kitchen": [
+        "Wipe and scrub kitchen stoves",
+        "Clean kitchen islands and table tops",
+        "Clean the sink",
+        "Clearing of thrash",
+        "Sweep and mop the floor"
+      ],
+      "Bathroom": ["Sanitize toilet", "Clean mirrors", "Scrub floor tiles"],
+      "Living room": ["Dusting furniture", "Vacuuming carpets", "Cleaning windows"],
+    };
 
-            // Owner Work Gallery (Using owner.images from JSON)
-            const Text("Work Gallery", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: owner.images.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    width: 100,
-                    margin: const EdgeInsets.only(right: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      image: DecorationImage(
-                        image: NetworkImage(owner.images[index].url),
-                        fit: BoxFit.cover,
-                      ),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Container(
+          height: MediaQuery.of(context).size.height * 0.75,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const Text("Task Information", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+
+              // Category Row
+              Row(
+                children: cats.map((c) {
+                  bool isSel = selectedCat == c;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(c),
+                      selected: isSel,
+                      onSelected: (val) => setSheetState(() => selectedCat = c),
+                      selectedColor: const Color(0xFFE8F0FE),
+                      labelStyle: TextStyle(color: isSel ? Colors.blue : Colors.grey),
                     ),
                   );
-                },
+                }).toList(),
+              ),
+              const SizedBox(height: 20),
+
+              // Task List
+              Expanded(
+                child: ListView.builder(
+                  itemCount: tasks[selectedCat]!.length,
+                  itemBuilder: (context, i) => Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade100),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.auto_awesome, color: Colors.blue, size: 18),
+                        const SizedBox(width: 12),
+                        Expanded(child: Text(tasks[selectedCat]![i])),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- 2. WHAT'S INCLUDED SHEET (GRID OF TOOLS) ---
+  void _showWhatsIncludedSheet(BuildContext context) {
+    // Note: Replace these with your actual local assets or network URLs
+    final List<String> tools = List.generate(9, (index) => 'assets/tool_$index.png');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            const Text("What's included", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 24),
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemCount: tools.length,
+                itemBuilder: (context, index) => Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade200),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.image_outlined, color: Colors.grey), // Replace with Image.asset
+                ),
               ),
             ),
           ],

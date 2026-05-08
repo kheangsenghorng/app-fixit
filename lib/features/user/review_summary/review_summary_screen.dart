@@ -149,6 +149,10 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
                   name: providerName,
                   image: providerImage,
                 ),
+                ProviderInfoCard(
+                  name: providerName,
+                  image: providerImage,
+                ),
                 if (categoryName.isNotEmpty || typeName.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Wrap(
