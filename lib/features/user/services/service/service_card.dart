@@ -192,32 +192,6 @@ class _ServiceCardState extends ConsumerState<ServiceCard> {
                     ],
                   ),
 
-                  const Spacer(),
-
-                  // Price and Duration
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "\$${item.basePrice}",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: isTablet ? 18 : 15,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Icon(Icons.timer_outlined, size: 12, color: Colors.grey[500]),
-                          const SizedBox(width: 2),
-                          Text(
-                            "${item.duration}m",
-                            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: 10),
 
                   // Action Button

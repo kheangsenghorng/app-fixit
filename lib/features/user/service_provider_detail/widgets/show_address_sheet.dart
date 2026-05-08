@@ -9,13 +9,16 @@ import '../../../auth/presentation/ui/login_sheet.dart';
 void showAddressSheet(
     BuildContext context, {
       required Map<String, dynamic> providerData,
+      required dynamic selectedPackage,
       required int id,
       required String name,
       required String image,
       required String selectedDate,
       required String selectedTime,
     }) {
+
   final theme = Theme.of(context);
+
   final colorScheme = theme.colorScheme;
   final formKey = GlobalKey<FormState>();
 
@@ -307,6 +310,7 @@ void showAddressSheet(
                             AppRoutes.reviewSummary,
                             arguments: {
                               'providerData': providerData,
+                              'selected_package': selectedPackage,
                               'house_no': houseController.text,
                               'street': streetController.text,
                               'address':

@@ -14,24 +14,32 @@ class ServiceInfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material( // Added Material for the click animation
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16), // Slightly more padding
-          child: Row(
-            children: [
-              Icon(icon, color: Colors.orange.shade400),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.grey.shade400, size: 22),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+                  ),
                 ),
-              ),
-              const Icon(Icons.chevron_right, color: Colors.grey, size: 20), // Changed to chevron
-            ],
+                const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+              ],
+            ),
           ),
         ),
       ),

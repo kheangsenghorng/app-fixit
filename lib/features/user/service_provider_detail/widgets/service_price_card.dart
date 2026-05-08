@@ -9,8 +9,8 @@ class ServicePriceCard extends StatelessWidget {
   final int? maxArea;
   final int? floorNumber;
   final int? bedrooms;
-  final bool isSelected; // Added this
-  final VoidCallback? onTap; // Added this
+  final bool isSelected;
+  final VoidCallback? onTap;
   final VoidCallback? onInfoPressed;
 
   const ServicePriceCard({
@@ -23,93 +23,111 @@ class ServicePriceCard extends StatelessWidget {
     this.maxArea,
     this.floorNumber,
     this.bedrooms,
-    this.isSelected = false, // Default to false
+    this.isSelected = false,
     this.onTap,
     this.onInfoPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          // Change background color if selected
-          color: isSelected ? Colors.blue.withOpacity(0.05) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          // Change border color if selected
+          color: isSelected ? const Color(0xFFF4F8FF) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey.shade200,
-            width: isSelected ? 2 : 1,
+            color: isSelected ? const Color(0xFF3F7AF6) : Colors.grey.shade200,
+            width: 2,
           ),
+          boxShadow: isSelected
+              ? [BoxShadow(color: Colors.blue.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))]
+              : null,
         ),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    maxArea != null
-                        ? "$title (${minArea}m² - ${maxArea}m²)"
-                        : (title ?? 'Service Detail'),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.blue : Colors.black, // Color change
-                    ),
-                  ),
-                  if (floorNumber != null || bedrooms != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      "Floor: ${floorNumber ?? 0} | Bedrooms: ${bedrooms ?? 0}",
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                    ),
-                  ],
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.access_time, size: 16, color: Colors.blue),
-                      const SizedBox(width: 4),
-                      Text(duration ?? 'N/A', style: const TextStyle(color: Colors.grey, fontSize: 13)),
-                      const SizedBox(width: 16),
-                      const Icon(Icons.people_outline, size: 16, color: Colors.blue),
-                      const SizedBox(width: 4),
-                      Text(technicians ?? '1 Technician', style: const TextStyle(color: Colors.grey, fontSize: 13)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            // Header: Title and Price
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  price != null ? (price!.contains('\$') ? price! : '\$$price') : '\$0',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: isSelected ? Colors.blue : Colors.black, // Color change
-                  ),
+                  title ?? 'Standard Plan',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF3F7AF6)),
                 ),
-                const SizedBox(height: 4),
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: Icon(Icons.info_outline, color: Colors.blue.shade300, size: 20),
-                  onPressed: onInfoPressed,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      price != null ? (price!.contains('\$') ? price! : '\$$price') : '\$0',
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF1D2129)),
+                    ),
+                    const Text("Base price", style: TextStyle(color: Colors.grey, fontSize: 11, fontStyle: FontStyle.italic)),
+                  ],
+                ),
+              ],
+            ),
+
+            // Subtitle
+            Text(
+              "Ideal for ${minArea}m² - ${maxArea}m²",
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+            ),
+
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Divider(height: 1, color: Color(0xFFE5E7EB)),
+            ),
+
+            // Detail Grid
+            Row(
+              children: [
+                Expanded(child: _buildDetailItem(Icons.apartment_outlined, "Floor", "${floorNumber ?? 01}")),
+                Expanded(child: _buildDetailItem(Icons.home_outlined, "Bedrooms", "${bedrooms ?? 0}")),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: _buildDetailItem(Icons.access_time, null, "${duration ?? '0.00'} hours")),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(child: _buildDetailItem(Icons.people_outline, null, "$technicians")),
+                      IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: const Icon(Icons.info, color: Color(0xFFB0B8C1), size: 22),
+                        onPressed: onInfoPressed,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDetailItem(IconData icon, String? label, String value) {
+    return Row(
+      children: [
+        Icon(icon, color: const Color(0xFF3F7AF6), size: 20),
+        const SizedBox(width: 8),
+        Text(
+          label != null ? "$label: " : "",
+          style: const TextStyle(color: Color(0xFF4B5563), fontSize: 14),
+        ),
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1F2937), fontSize: 14),
+        ),
+      ],
     );
   }
 }

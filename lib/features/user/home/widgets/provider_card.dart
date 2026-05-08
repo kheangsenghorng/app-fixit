@@ -147,14 +147,6 @@ class ProviderCard extends StatelessWidget {
                               color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
                             ),
                           ),
-                          Text(
-                            "\$${service.basePrice}",
-                            style: TextStyle(
-                              color: primaryColor,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 16,
-                            ),
-                          ),
                         ],
                       ),
                       // Action Icon
