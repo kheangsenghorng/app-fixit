@@ -73,6 +73,10 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
     args['providerData'] is Map<String, dynamic>
         ? args['providerData']
         : {};
+    final Map<String, dynamic> selectedPackage =
+    args['selected_package'] is Map<String, dynamic>
+        ? args['selected_package']
+        : {};
 
     final String address = args['address']?.toString() ?? "No address provided";
     final String providerName = args['name']?.toString() ?? "Emily Jani";
@@ -85,9 +89,22 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
         providerData['category']?['name']?.toString() ?? '';
 
     final double basePrice =
-        double.tryParse(providerData['base_price']?.toString() ?? '0') ?? 0;
+        double.tryParse(selectedPackage['price']?.toString() ?? '0') ?? 0;
 
-    discountedPrice ??= basePrice;
+    final String packageTitle =
+        selectedPackage['title']?.toString() ?? 'Selected Package';
+
+    final String packageDuration =
+        selectedPackage['duration_hours']?.toString() ?? '';
+
+    final String packageWorkers =
+        selectedPackage['workers_count']?.toString() ?? '';
+
+    if (appliedCoupon == null) {
+      discountedPrice = basePrice;
+    }
+
+    final double displayPrice = discountedPrice ?? basePrice;
 
     final String typeName = providerData['type'] is Map
         ? providerData['type']['name']?.toString() ?? ''
@@ -148,6 +165,62 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
                 ProviderInfoCard(
                   name: providerName,
                   image: providerImage,
+                ),
+
+                const SizedBox(height: 12),
+
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Selected Package',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        packageTitle,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          InfoBadge(
+                            icon: Icons.attach_money,
+                            label: '\$${basePrice.toStringAsFixed(2)}',
+                          ),
+                          if (packageDuration.isNotEmpty)
+                            InfoBadge(
+                              icon: Icons.schedule,
+                              label: '$packageDuration hours',
+                            ),
+                          if (packageWorkers.isNotEmpty)
+                            InfoBadge(
+                              icon: Icons.groups_outlined,
+                              label: '$packageWorkers workers',
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
                 if (categoryName.isNotEmpty || typeName.isNotEmpty) ...[
                   const SizedBox(height: 12),
@@ -255,9 +328,10 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
                   text: "Payment Overview",
                 ),
                 PriceSummaryCard(
-                  totalPrice: '\$${(discountedPrice ?? basePrice).toStringAsFixed(2)}/H',
+                  packageTitle: packageTitle,
+                  totalPrice: '\$${displayPrice.toStringAsFixed(2)}',
                   originalPrice: appliedCoupon != null
-                      ? '\$${basePrice.toStringAsFixed(2)}/H'
+                      ? '\$${basePrice.toStringAsFixed(2)}'
                       : null,
                   couponText: appliedCoupon != null
                       ? appliedCoupon!.discountType == 'percent'
@@ -274,7 +348,7 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
             right: 0,
             child: FloatingActionSection(
               time: timeText,
-              totalPrice: discountedPrice ?? basePrice,
+              totalPrice: displayPrice,
               originalPrice: appliedCoupon != null ? basePrice : null,
               onPaymentSelected: (method) async {
                 try {
@@ -366,6 +440,7 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
                   final bookingResponse = await bookingRepository.createBooking(
                     userId: userId,
                     serviceId: providerData['id'] ?? 0,
+                    servicePackageId: selectedPackage['id'],
                     houseNo: houseNo,
                     street: street,
                     bookingDate: dateText,

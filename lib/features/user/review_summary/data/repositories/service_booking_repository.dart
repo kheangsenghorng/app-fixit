@@ -17,6 +17,7 @@ class ServiceBookingRepository {
     required double latitude,
     required double longitude,
     required String mapUrl,
+    required servicePackageId,
     String? note,
 
   }) async {
@@ -26,6 +27,7 @@ class ServiceBookingRepository {
         data: {
           'user_id':userId,
           'service_id': serviceId,
+          'service_packages':servicePackageId,
           'house_number':houseNo,
           'street_number':street,
           'booking_date': bookingDate,

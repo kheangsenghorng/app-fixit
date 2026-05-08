@@ -74,8 +74,8 @@ class MainBottomNav extends StatelessWidget {
                 ),
                  _buildSmoothTab(
                   index: 3,
-                  icon: Icons.settings_rounded,
-                  label: l10n.t('nav_settings'), 
+                  icon: Icons.wallet,
+                  label: l10n.t('nav_wallet'),
                   isSelected: currentIndex == 3,
                   activeColor: activeColor,
                   inactiveColor: inactiveColor,

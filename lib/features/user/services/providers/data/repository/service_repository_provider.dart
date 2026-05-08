@@ -6,6 +6,7 @@ import '../../../../../../core/network/dio_provider.dart';
 import '../../../../../../core/models/service_model.dart';
 import '../model/service_response_model.dart';
 
+
 final serviceRepositoryProvider = Provider<ServiceRepository>((ref) {
   return ServiceRepository(ref.read(dioProvider));
 });
@@ -20,8 +21,8 @@ class ServiceRepository {
       ApiEndpoints.activeServicesByType(typeId),
     );
 
-    final response = ServiceResponse.fromJson(
-      Map<String, dynamic>.from(res.data as Map),
+    final response = ServiceListResponse.fromJson(
+      Map<String, dynamic>.from(res.data),
     );
 
     return response.data;

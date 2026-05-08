@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 class PriceSummaryCard extends StatelessWidget {
+  final String packageTitle;
   final String totalPrice;
   final String? originalPrice;
   final String? couponText;
 
   const PriceSummaryCard({
     super.key,
+    required this.packageTitle,
     required this.totalPrice,
     this.originalPrice,
     this.couponText,
@@ -29,15 +31,39 @@ class PriceSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _priceRow(theme, "Service Fee", totalPrice, false),
+          _priceRow(
+            theme,
+            "Package",
+            packageTitle,
+            false,
+          ),
+
           const SizedBox(height: 12),
-          _priceRow(theme, "Traveling Fee", "Free", true),
+
+          _priceRow(
+            theme,
+            "Service Fee",
+            originalPrice ?? totalPrice,
+            false,
+          ),
+
+          const SizedBox(height: 12),
+
+          _priceRow(
+            theme,
+            "Traveling Fee",
+            "Free",
+            true,
+          ),
 
           if (couponText != null && originalPrice != null) ...[
             const SizedBox(height: 12),
-            _priceRow(theme, "Original Price", originalPrice!, false),
-            const SizedBox(height: 12),
-            _priceRow(theme, "Coupon", couponText!, true),
+            _priceRow(
+              theme,
+              "Coupon",
+              couponText!,
+              true,
+            ),
           ],
 
           const Padding(
@@ -82,7 +108,12 @@ class PriceSummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _priceRow(ThemeData theme, String label, String price, bool highlight) {
+  Widget _priceRow(
+      ThemeData theme,
+      String label,
+      String price,
+      bool highlight,
+      ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -93,11 +124,14 @@ class PriceSummaryCard extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
-        Text(
-          price,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: highlight ? Colors.green : theme.colorScheme.onSurface,
+        Flexible(
+          child: Text(
+            price,
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: highlight ? Colors.green : theme.colorScheme.onSurface,
+            ),
           ),
         ),
       ],

@@ -3,21 +3,31 @@ import 'package:flutter/material.dart';
 import 'provider_detail_content_view.dart';
 
 class ProviderDetailBodyView extends StatelessWidget {
-  final dynamic service; // This is the 'data' object from your JSON
+  final dynamic service;
+  final Function(dynamic package) onPackageSelected;
 
-  const ProviderDetailBodyView({super.key, required this.service});
+  const ProviderDetailBodyView({
+    super.key,
+    required this.service,
+    required this.onPackageSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
       slivers: [
-        // Updated to pass 'images' (the list) instead of 'imageUrl' (one string)
         ProviderDetailAppBar(
           name: service.title,
-          images: service.images, // Pass the list directly
+          images: service.images,
         ),
-        ProviderDetailContentView(service: service),
+
+        ProviderDetailContentView(
+          service: service,
+          onPackageSelected: onPackageSelected,
+        ),
       ],
     );
   }

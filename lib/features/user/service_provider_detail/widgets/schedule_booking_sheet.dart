@@ -120,11 +120,11 @@ void scheduleBookingSheet(
                     showAddressSheet(
                       context,
                       providerData: providerData,
-                      id:providerData['id'],
+                      selectedPackage:providerData['selected_package'],
+                      id: providerData['id'],
                       name: providerData['title']?.toString() ?? "Service",
                       image: image,
-                      selectedDate:
-                      DateFormat('MMMM dd, yyyy').format(selectedDate),
+                      selectedDate: DateFormat('MMMM dd, yyyy').format(selectedDate),
                       selectedTime: selectedTime,
                     );
                   },

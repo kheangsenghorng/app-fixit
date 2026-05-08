@@ -321,14 +321,6 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage>
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              '\$${service.basePrice}',
-                              style: TextStyle(
-                                color: primaryColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
-                            ),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 14,

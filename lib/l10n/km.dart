@@ -24,7 +24,7 @@ const Map<String, String> km = {
   'nav_search': 'ស្វែងរក',
   'nav_city': 'ទីក្រុង',
   'nav_order': 'ការកម្ម៉ង់',
-  'nav_settings': 'ការកំណត់',
+  'nav_wallet': 'កាបូបប្រាក់',
   'nav_profile': 'គណនី',
   'logout_title': 'ចាកចេញ',
   "already_have_account": "មានគណនីរួចហើយមែនទេ?",

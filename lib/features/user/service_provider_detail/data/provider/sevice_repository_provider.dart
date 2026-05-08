@@ -15,15 +15,28 @@ class ServiceRepository {
   ServiceRepository(this.dio);
 
   Future<Service> getServiceById(int serviceId) async {
-    final res = await dio.get(
-      ApiEndpoints.service(serviceId),
-    );
+    try {
+      final res = await dio.get(
+        ApiEndpoints.service(serviceId),
+      );
 
-    final data = res.data['data'];
+      final data = res.data['data'];
 
+      if (data == null) {
+        throw Exception('Service data not found');
+      }
 
-    return Service.fromJson(
-      Map<String, dynamic>.from(data),
-    );
+      return Service.fromJson(
+        Map<String, dynamic>.from(data),
+      );
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data?['message']?.toString() ??
+            e.message ??
+            'Failed to load service',
+      );
+    } catch (e) {
+      throw Exception(e.toString());
+    }
   }
 }
