@@ -3,7 +3,7 @@ import 'package:fixit/features/auth/presentation/ui/login_sheet.dart';
 import 'package:fixit/features/user/home/home_screen.dart';
 import 'package:fixit/features/user/orders/my_orders_screen.dart';
 import 'package:fixit/features/user/profile/profile_screen.dart';
-import 'package:fixit/features/user/profile/settings/settings_screen.dart';
+import 'package:fixit/features/user/profile/wallet/wallet_screen.dart';
 import 'package:fixit/features/user/search/search_result_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,10 +24,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedIndex = widget.currentIndex; // ← add this
+    _selectedIndex = widget.currentIndex;
   }
 
-  // Login sheet
   void _showLoginSheet() {
     showModalBottomSheet(
       context: context,
@@ -38,9 +37,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void _handleNavTap(int index, {bool pop = false}) {
-    final requiresLogin = index == 2 || index == 4 || index == 3;
+    final requiresLogin = index == 2 || index == 3 || index == 4;
 
-    // ✅ ref.read is correct inside callbacks/methods
     final authState = ref.read(authControllerProvider);
 
     final isLoggedIn = authState.maybeWhen(
@@ -60,18 +58,20 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-    // 🔥 Listen for logout → go Home
     ref.listen(authControllerProvider, (prev, next) {
-      // ✅ valueOrNull never throws — returns null on error or loading
-      if (prev?.valueOrNull != null && next.valueOrNull == null && !next.hasError) {
+      if (prev?.valueOrNull != null &&
+          next.valueOrNull == null &&
+          !next.hasError) {
         setState(() => _selectedIndex = 0);
       }
     });
 
-    ref.watch(authControllerProvider);
+    final authState = ref.watch(authControllerProvider);
+    final auth = authState.valueOrNull;
+
+    final int? userId = auth?.user?.id;
 
     final screens = [
       HomeScreen(
@@ -80,7 +80,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       ),
       const SearchResultScreen(),
       const MyOrdersScreen(),
-      const WalletScreen(),
+      if (userId != null)
+        WalletScreen(userId: userId)
+      else
+        const Center(
+          child: Text("Please login to view wallet"),
+        ),
       const ProfileScreen(),
     ];
 

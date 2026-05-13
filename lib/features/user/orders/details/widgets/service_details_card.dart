@@ -14,10 +14,11 @@ class ServiceDetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final serviceName = booking.service?.name ?? 'N/A';
+    final serviceName = booking.service?.name ?? booking.service?.title ?? 'N/A';
+    final packageTitle = booking.package?.title ?? 'N/A';
     final bookingDate = booking.bookingDate ?? 'N/A';
     final bookingHours = booking.bookingHours ?? '';
-    final address = booking.address ?? 'N/A';
+    final address = booking.address?.address ?? 'N/A';
 
     return OrderSectionCard(
       title: "Order Details",
@@ -27,6 +28,11 @@ class ServiceDetailsCard extends StatelessWidget {
             icon: Icons.handyman_outlined,
             label: "Service",
             value: serviceName,
+          ),
+          OrderInfoDetailRow(
+            icon: Icons.inventory_2_outlined,
+            label: "Package",
+            value: packageTitle,
           ),
           OrderInfoDetailRow(
             icon: Icons.calendar_today,

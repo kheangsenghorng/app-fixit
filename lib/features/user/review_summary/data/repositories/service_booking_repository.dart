@@ -13,26 +13,25 @@ class ServiceBookingRepository {
     required String street,
     required String bookingDate,
     required String bookingHours,
-    required String address,
+    required int addressId,
     required double latitude,
     required double longitude,
     required String mapUrl,
-    required servicePackageId,
+    required int servicePackageId,
     String? note,
-
   }) async {
     try {
       final response = await dio.post(
         ApiEndpoints.bookingService,
         data: {
-          'user_id':userId,
+          'user_id': userId,
           'service_id': serviceId,
-          'service_packages':servicePackageId,
-          'house_number':houseNo,
-          'street_number':street,
+          'package_id': servicePackageId,
+          'house_number': houseNo,
+          'street_number': street,
           'booking_date': bookingDate,
           'booking_hours': bookingHours,
-          'address': address,
+          'address_id': addressId,
           'latitude': latitude,
           'longitude': longitude,
           'map_url': mapUrl,
@@ -43,8 +42,7 @@ class ServiceBookingRepository {
       return response;
     } on DioException catch (e) {
       throw Exception(
-        e.response?.data['message'] ??
-            'Failed to create service booking',
+        e.response?.data['message'] ?? 'Failed to create service booking',
       );
     } catch (e) {
       throw Exception('Something went wrong: $e');

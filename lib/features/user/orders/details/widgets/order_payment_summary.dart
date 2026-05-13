@@ -14,7 +14,7 @@ class OrderPaymentSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final payment = booking.payment.isNotEmpty ? booking.payment.first : null;
+    final payment = booking.payments.isNotEmpty ? booking.payments.first : null;
 
     final originalAmount = payment?.originalAmount ?? '0.00';
     final discountAmount = payment?.discountAmount ?? '0.00';

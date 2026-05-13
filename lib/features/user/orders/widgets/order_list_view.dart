@@ -18,7 +18,8 @@ class OrderListView extends ConsumerWidget {
   });
 
   Future<void> _onRefresh(WidgetRef ref) async {
-    await ref.refresh(paymentsHistoryProvider(userId).future);
+    ref.invalidate(paymentsHistoryProvider(userId));
+    await ref.read(paymentsHistoryProvider(userId).future);
   }
 
   @override
@@ -103,16 +104,22 @@ class OrderListView extends ConsumerWidget {
     List<ServiceBooking> filtered = [];
 
     if (selectedTab == 0) {
-      filtered = bookings.where((b) {
-        return b.payment.any((p) => (p.status?.toLowerCase() ?? '') != 'paid');
+      filtered = bookings.where((booking) {
+        if (booking.payments.isEmpty) return true;
+
+        return booking.payments.any((payment) {
+          return (payment.status?.toLowerCase() ?? '') != 'paid';
+        });
       }).toList();
     } else if (selectedTab == 1) {
-      filtered = bookings.where((b) {
-        return b.payment.any((p) => (p.status?.toLowerCase() ?? '') == 'paid');
+      filtered = bookings.where((booking) {
+        return booking.payments.any((payment) {
+          return (payment.status?.toLowerCase() ?? '') == 'paid';
+        });
       }).toList();
     } else {
-      filtered = bookings.where((b) {
-        return (b.bookingStatus?.toLowerCase() ?? '') == 'pending';
+      filtered = bookings.where((booking) {
+        return (booking.bookingStatus?.toLowerCase() ?? '') == 'pending';
       }).toList();
     }
 
@@ -128,35 +135,49 @@ class OrderListView extends ConsumerWidget {
     return Column(
       children: filtered.map((booking) {
         final Payment? payment =
-        booking.payment.isNotEmpty ? booking.payment.first : null;
+        booking.payments.isNotEmpty ? booking.payments.first : null;
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: OrderCard(
             icon: _getIcon(selectedTab),
-            amount: payment?.finalAmount ?? "0.00",
+            amount: payment?.finalAmount ?? booking.package?.price ?? "0.00",
             date: booking.bookingDate ?? '',
-            time: booking.bookingHours,
-            expertName: booking.service?.name ?? 'Unknown Service',
+            time: booking.bookingHours ?? '',
+            expertName: booking.service?.name ??
+                booking.service?.title ??
+                'Unknown Service',
             activeColor: primaryColor,
             statusLabel: _getStatusLabel(selectedTab, payment, booking),
             statusColor: _getStatusColor(selectedTab, payment, booking),
-            actionButtonText: _getActionButtonText(selectedTab, payment, booking),
+            actionButtonText: _getActionButtonText(
+              selectedTab,
+              payment,
+              booking,
+            ),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) =>  OrderDetailsScreen(
+                builder: (_) => OrderDetailsScreen(
                   bookingId: booking.id,
                 ),
               ),
             ),
-            onActionPressed: _getActionButtonText(selectedTab, payment, booking) == null
+            onActionPressed:
+            _getActionButtonText(selectedTab, payment, booking) == null
                 ? null
                 : () {
               if (selectedTab == 0) {
                 Navigator.pushNamed(context, '/payment');
               } else if (selectedTab == 2) {
-                Navigator.pushNamed(context, AppRoutes.orderDetails);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => OrderDetailsScreen(
+                      bookingId: booking.id,
+                    ),
+                  ),
+                );
               }
             },
           ),
@@ -198,10 +219,24 @@ class OrderListView extends ConsumerWidget {
       return Colors.orange;
     }
 
+    final bookingStatus = booking.bookingStatus?.toLowerCase();
+
+    if (bookingStatus == 'cancelled' || bookingStatus == 'canceled') {
+      return Colors.red;
+    }
+
+    if (bookingStatus == 'completed') {
+      return Colors.green;
+    }
+
     return Colors.blue;
   }
 
-  String? _getActionButtonText(int tab, Payment? payment, ServiceBooking booking) {
+  String? _getActionButtonText(
+      int tab,
+      Payment? payment,
+      ServiceBooking booking,
+      ) {
     final paymentStatus = payment?.status?.toLowerCase();
 
     if (tab == 0) {
@@ -209,6 +244,14 @@ class OrderListView extends ConsumerWidget {
     }
 
     if (tab == 2) {
+      final bookingStatus = booking.bookingStatus?.toLowerCase();
+
+      if (bookingStatus == 'cancelled' ||
+          bookingStatus == 'canceled' ||
+          bookingStatus == 'completed') {
+        return null;
+      }
+
       return "Cancel Booking";
     }
 

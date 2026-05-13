@@ -4,13 +4,16 @@ import 'package:fixit/features/user/service_provider_detail/widgets/calendar_car
 import 'package:fixit/features/user/service_provider_detail/widgets/show_address_sheet.dart';
 import 'package:fixit/features/user/service_provider_detail/widgets/time_grid.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../data/provider/user_address_service_provider.dart';
 
 void scheduleBookingSheet(
-    BuildContext context,
+    BuildContext parentContext,
+    WidgetRef ref,
     Map<String, dynamic> providerData,
     ) {
-  final theme = Theme.of(context);
+  final theme = Theme.of(parentContext);
 
   DateTime selectedDate = DateTime.now();
   String selectedTime = '';
@@ -25,16 +28,15 @@ void scheduleBookingSheet(
     "16:00 PM",
   ];
 
-
   showModalBottomSheet(
-    context: context,
+    context: parentContext,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) {
+    builder: (sheetContext) {
       return StatefulBuilder(
         builder: (context, setModalState) {
           return Container(
-            height: MediaQuery.of(context).size.height * 0.9,
+            height: MediaQuery.of(sheetContext).size.height * 0.9,
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               borderRadius: const BorderRadius.only(
@@ -47,6 +49,7 @@ void scheduleBookingSheet(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const BookingHeader(),
+
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -59,7 +62,9 @@ void scheduleBookingSheet(
                             fontSize: 16,
                           ),
                         ),
+
                         const SizedBox(height: 15),
+
                         CalendarCard(
                           selectedDate: selectedDate,
                           onDateSelected: (newDate) {
@@ -73,7 +78,9 @@ void scheduleBookingSheet(
                             });
                           },
                         ),
+
                         const SizedBox(height: 25),
+
                         Text(
                           "Selected: ${DateFormat('yyyy-MM-dd').format(selectedDate)}",
                           style: const TextStyle(
@@ -82,7 +89,9 @@ void scheduleBookingSheet(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+
                         const SizedBox(height: 10),
+
                         const Text(
                           "Select Time",
                           style: TextStyle(
@@ -90,7 +99,9 @@ void scheduleBookingSheet(
                             fontSize: 16,
                           ),
                         ),
+
                         const SizedBox(height: 10),
+
                         TimeGrid(
                           label: "Available Times",
                           times: availableTimes,
@@ -106,27 +117,37 @@ void scheduleBookingSheet(
                     ),
                   ),
                 ),
+
                 BookingButton(
                   onPressed: selectedTime.isEmpty
                       ? null
                       : () {
-                    Navigator.pop(context);
-
                     final images = providerData['images'];
                     final image = (images is List && images.isNotEmpty)
                         ? images.first.toString()
                         : 'assets/images/providers/img.png';
 
-                    showAddressSheet(
-                      context,
-                      providerData: providerData,
-                      selectedPackage:providerData['selected_package'],
-                      id: providerData['id'],
-                      name: providerData['title']?.toString() ?? "Service",
-                      image: image,
-                      selectedDate: DateFormat('MMMM dd, yyyy').format(selectedDate),
-                      selectedTime: selectedTime,
-                    );
+                    Navigator.pop(sheetContext);
+
+                    Future.microtask(() {
+                      if (!parentContext.mounted) return;
+
+                      showAddressSheet(
+                        parentContext,
+                        addressService:
+                        ref.read(userAddressServiceProvider),
+                        providerData: providerData,
+                        selectedPackage:
+                        providerData['selected_package'],
+                        id: providerData['id'],
+                        name: providerData['title']?.toString() ??
+                            "Service",
+                        image: image,
+                        selectedDate: DateFormat('MMMM dd, yyyy')
+                            .format(selectedDate),
+                        selectedTime: selectedTime,
+                      );
+                    });
                   },
                 ),
               ],

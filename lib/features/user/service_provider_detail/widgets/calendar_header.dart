@@ -3,8 +3,8 @@ import 'package:intl/intl.dart';
 
 class CalendarHeader extends StatelessWidget {
   final DateTime viewDate;
-  final VoidCallback onPreviousMonth;
-  final VoidCallback onNextMonth;
+  final VoidCallback? onPreviousMonth;
+  final VoidCallback? onNextMonth;
 
   const CalendarHeader({
     super.key,
@@ -16,6 +16,7 @@ class CalendarHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -26,11 +27,17 @@ class CalendarHeader extends StatelessWidget {
         Row(
           children: [
             IconButton(
-              icon: Icon(Icons.chevron_left, color: primary),
+              icon: Icon(
+                Icons.chevron_left,
+                color: onPreviousMonth == null ? Colors.grey : primary,
+              ),
               onPressed: onPreviousMonth,
             ),
             IconButton(
-              icon: Icon(Icons.chevron_right, color: primary),
+              icon: Icon(
+                Icons.chevron_right,
+                color: onNextMonth == null ? Colors.grey : primary,
+              ),
               onPressed: onNextMonth,
             ),
           ],

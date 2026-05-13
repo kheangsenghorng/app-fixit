@@ -1,63 +1,112 @@
 class ApiEndpoints {
-  static const login = '/login';
-  static const register = '/register';
-  static const me = '/me';
-  static const logout = '/logout';
-  static const refresh = '/refresh';
-  static const sendOtp = '/otp/send';
-  static const verifyOtp = '/otp/verify';
+  static const String login = '/login';
+  static const String register = '/register';
+  static const String me = '/me';
+  static const String logout = '/logout';
+  static const String refresh = '/refresh';
+  static const String sendOtp = '/otp/send';
+  static const String verifyOtp = '/otp/verify';
 
   // Customer profile
-  static const customerProfile = '/customer/profile';
-  static const customerAvatar = '/customer/avatar';
+  static const String customerProfile = '/customer/profile';
+  static const String customerAvatar = '/customer/avatar';
 
-  static const active = "/type/active";
+  static const String active = "/type/active";
+  static const String activeCategory = "/category/active";
 
-  static const activeCategory = "/category/active";
-
-  // get all services
-  static const activeServices = "/service/active";
+  // Services
+  static const String activeServices = "/service/active";
 
   static String activeByCategory(int categoryId) {
     return "/type/active?category_id=$categoryId";
   }
 
-  // Get service by id types
-  static String activeServicesByType(int typeId){
-     return "/service/active?type_id=$typeId";
+  static String activeServicesByType(int typeId) {
+    return "/service/active?type_id=$typeId";
   }
-  // get by id service
+
   static String service(int serviceId) {
     return "/service/$serviceId/serviceId";
   }
 
-  static String bookingService = "/customer/service-bookings";
+  // Booking
+  static const String bookingService = "/customer/service-bookings";
+  static const String serviceBookings = "/customer/service-bookings";
 
-  static String coupons = "/v1/coupons/show-apply";
-
-  static String couponUsage = "/v1/coupon-usages";
-
-  static String payment = "/customer/payments";
-
-  static String generatePayment = "/generate-payment";
-
-  static String checkMd5 = "/payments/khqr/check-md5";
-
-  static String downloadQRcode = "/payments/download-qr";
-
-  static String paymentsHistory = "/customer/service-bookings/user";
-
-  static String serviceBookings = "/customer/service-bookings";
-
-  static String serviceBookingByBooking(int bookingId){
-      return "$serviceBookings/$bookingId";
+  static String serviceBookingByBooking(int bookingId) {
+    return "$serviceBookings/$bookingId";
   }
-  static String searchActiveServices = "/service/search-active-services";
 
+  // Coupons
+  static const String coupons = "/v1/coupons/show-apply";
+  static const String couponUsage = "/v1/coupon-usages";
+
+  // Payment
+  static const String payment = "/customer/payments";
+  static const String generatePayment = "/generate-payment";
+  static const String checkMd5 = "/payments/khqr/check-md5";
+  static const String downloadQRcode = "/payments/download-qr";
+  static const String paymentsHistory = "/customer/service-bookings/user";
+
+  // Customer addresses
+  static const String addresses = "/customer/user-addresses";
+
+  static String addressById(int addressId) {
+    return "$addresses/$addressId";
+  }
+
+  // Search
+  static const String searchActiveServices = "/service/search-active-services";
+
+  // Booking providers
   static const String serviceBookingProviders =
       "/customer/service-booking-providers";
 
   static String serviceBookingProvidersByBooking(int bookingId) {
     return "$serviceBookingProviders/booking/$bookingId";
+  }
+
+  // =========================
+  // Wallets
+  // =========================
+
+  static const String wallets = "/customer/wallets";
+
+  static String walletById(int walletId) {
+    return "$wallets/$walletId";
+  }
+
+  static String walletByUserId(int userId) {
+    return "$wallets/user/$userId";
+  }
+
+  static String topUpWallet(int walletId) {
+    return "$wallets/$walletId/top-up";
+  }
+
+  static String freezeWallet(int walletId) {
+    return "$wallets/$walletId/freeze";
+  }
+
+  static String activateWallet(int walletId) {
+    return "$wallets/$walletId/activate";
+  }
+
+  // =========================
+  // Wallet Transactions
+  // =========================
+
+  static const String walletTransactions = "/customer/wallet-transactions";
+
+  static String walletTransactionById(int id) {
+    return "$walletTransactions/$id";
+  }
+
+  static String walletTransactionsByUserId(int userId) {
+    return "$walletTransactions/user/$userId";
+  }
+
+  static String walletTransactionsByWalletId(int walletId) {
+    return "$walletTransactions/wallet/$walletId";
   }
 }

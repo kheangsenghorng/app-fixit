@@ -10,8 +10,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/coupon_model.dart';
 import '../../auth/presentation/providers/auth_controller.dart';
+import '../profile/wallet/data/providers/wallet_provider.dart';
 import 'data/model/payment_request_model.dart';
 import 'data/providers/service_booking_provider.dart';
+import 'data/providers/wallet_transaction_repository_provider.dart';
 import 'data/repositories/coupon_repository.dart';
 
 import 'data/repositories/coupon_usage_repository.dart';
@@ -79,6 +81,17 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
         : {};
 
     final String address = args['address']?.toString() ?? "No address provided";
+
+    final int? addressId = args['address_id'] is int
+        ? args['address_id'] as int
+        : int.tryParse(args['address_id']?.toString() ?? '');
+
+
+    final int? packageId = selectedPackage['id'] is int
+        ? selectedPackage['id'] as int
+        : int.tryParse(selectedPackage['id']?.toString() ?? '');
+
+
     final String providerName = args['name']?.toString() ?? "Emily Jani";
     final String dateText = args['date']?.toString() ?? "Dec 23, 2024";
     final String timeText = args['time']?.toString() ?? "10:00 AM";
@@ -353,6 +366,7 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
               onPaymentSelected: (method) async {
                 try {
                   await ref.read(authControllerProvider.notifier).loadProfile();
+
                   final auth = ref.read(authControllerProvider).valueOrNull;
                   final int? userId = auth?.user?.id;
 
@@ -362,10 +376,14 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
 
                   final paymentRepository = ref.read(paymentRepositoryProvider);
                   final bookingRepository = ref.read(serviceBookingRepositoryProvider);
+                  final walletTransactionRepository =
+                  ref.read(walletTransactionRepositoryProvider);
 
                   final totalAmount = discountedPrice ?? basePrice;
-                  final discountAmount =
-                  appliedCoupon != null ? (basePrice - totalAmount) : 0;
+
+                  final discountAmount = appliedCoupon != null
+                      ? basePrice - totalAmount
+                      : 0.0;
 
                   String transactionId;
                   String paymentStatus;
@@ -429,6 +447,12 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
 
                     transactionId = externalRef;
                     paymentStatus = 'paid';
+                  } else if (method == 'wallet') {
+                    if (!context.mounted) return;
+                    Navigator.of(context).pop();
+
+                    transactionId = 'WALLET-${DateTime.now().millisecondsSinceEpoch}';
+                    paymentStatus = 'paid';
                   } else {
                     if (!context.mounted) return;
                     Navigator.of(context).pop();
@@ -437,15 +461,29 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
                     paymentStatus = 'pending';
                   }
 
+                  if (addressId == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please select an address')),
+                    );
+                    return;
+                  }
+
+                  if (packageId == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please select a package')),
+                    );
+                    return;
+                  }
+
                   final bookingResponse = await bookingRepository.createBooking(
                     userId: userId,
                     serviceId: providerData['id'] ?? 0,
-                    servicePackageId: selectedPackage['id'],
+                    servicePackageId: packageId,
                     houseNo: houseNo,
                     street: street,
                     bookingDate: dateText,
                     bookingHours: timeText,
-                    address: address,
+                    addressId: addressId,
                     latitude: latitude ?? 0,
                     longitude: longitude ?? 0,
                     mapUrl: mapUrl ?? '',
@@ -468,7 +506,7 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
                     throw Exception('Owner ID not found');
                   }
 
-                  await paymentRepository.payment(
+                  final paymentResponse = await paymentRepository.payment(
                     PaymentRequest(
                       userId: userId,
                       ownerId: ownerId,
@@ -483,6 +521,40 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
                     ),
                   );
 
+                  final int paymentId = paymentResponse.data.id;
+
+
+                  if (method == 'wallet') {
+                    final walletRepository = ref.read(walletRepositoryProvider);
+
+                    final walletResponse = await walletRepository.getWalletByUserId(userId);
+
+                    final wallet = walletResponse.data;
+
+                    if (wallet == null) {
+                      throw Exception('Wallet not found');
+                    }
+
+                    if (!wallet.isActive || wallet.status != 'active') {
+                      throw Exception('Wallet is not active');
+                    }
+
+                    if (wallet.balance < totalAmount) {
+                      throw Exception('Insufficient wallet balance');
+                    }
+
+                    await walletTransactionRepository.createWalletTransaction(
+                      walletId: wallet.walletId,
+                      userId: userId,
+                      paymentId: paymentId,
+                      serviceBookingId: bookingId,
+                      type: 'debit',
+                      method: 'wallet',
+                      transactionRef: 'WALLET-$bookingId',
+                      amount: totalAmount,
+                      description: 'Wallet payment for service booking #$bookingId',
+                    );
+                  }
                   if (appliedCoupon != null) {
                     await ref.read(couponUsageRepositoryProvider).createCouponUsage(
                       couponId: appliedCoupon!.id,
@@ -508,7 +580,7 @@ class _ReviewSummaryScreenState extends ConsumerState<ReviewSummaryScreen> {
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(e.toString()),
+                      content: Text(e.toString().replaceFirst('Exception: ', '')),
                     ),
                   );
                 }
