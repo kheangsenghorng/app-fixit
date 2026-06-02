@@ -16,25 +16,24 @@ class OrderTabSwitcher extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // 1. EXACT HEADER COLORS & GLASS LOGIC
-    final glassColor = isDark 
-        ? const Color(0xFF1A1A1A).withValues(alpha: 0.7) 
+    final glassColor = isDark
+        ? const Color(0xFF1A1A1A).withValues(alpha: 0.7)
         : Colors.white.withValues(alpha: 0.8);
-    
-    final borderColor = isDark 
-        ? Colors.white.withValues(alpha: 0.1) 
+
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
         : Colors.black.withValues(alpha: 0.05);
-        
+
     final contentColor = isDark ? Colors.white : Colors.black;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(35), // Matches Header Radius
+        borderRadius: BorderRadius.circular(35),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15), // Matches Header Blur
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
-            height: 60, // Matches Header Height
+            height: 60,
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: glassColor,
@@ -46,6 +45,7 @@ class OrderTabSwitcher extends StatelessWidget {
                 _buildTab(0, "Unpaid", isDark, contentColor),
                 _buildTab(1, "History", isDark, contentColor),
                 _buildTab(2, "Schedule", isDark, contentColor),
+                _buildTab(3, "Refunded", isDark, contentColor),
               ],
             ),
           ),
@@ -64,10 +64,10 @@ class OrderTabSwitcher extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutCubic,
+          margin: const EdgeInsets.symmetric(horizontal: 2),
           decoration: BoxDecoration(
-            // The active "pill" inside the glass
-            color: isSelected 
-                ? (isDark ? Colors.white : Colors.black) 
+            color: isSelected
+                ? (isDark ? Colors.white : Colors.black)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
@@ -75,17 +75,19 @@ class OrderTabSwitcher extends StatelessWidget {
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
-                )
+                ),
             ],
           ),
           alignment: Alignment.center,
           child: Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500,
-              color: isSelected 
-                  ? (isDark ? Colors.black : Colors.white) 
+              color: isSelected
+                  ? (isDark ? Colors.black : Colors.white)
                   : contentColor.withValues(alpha: 0.4),
               letterSpacing: 0.2,
             ),

@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+// Maintain your existing imports
+import '../../../../review_summary/data/model/payment_request_model.dart';
+import '../../../../review_summary/data/repositories/payment_repository.dart';
+import '../../../../review_summary/widgets/payment_qr_dialog.dart';
 import '../../data/providers/wallet_provider.dart';
-
 
 class DepositPage extends ConsumerStatefulWidget {
   final int walletId;
@@ -20,33 +23,18 @@ class DepositPage extends ConsumerStatefulWidget {
 }
 
 class _DepositPageState extends ConsumerState<DepositPage> {
-  final TextEditingController _amountController =
-  TextEditingController(text: "0.00");
+  final TextEditingController _amountController = TextEditingController(text: "0.00");
+  String _selectedMethodKey = 'khqr';
+  String? _loadingMethodKey;
 
-  int _selectedMethodIndex = 0;
-
+  bool get _isProcessing => _loadingMethodKey != null;
   final List<String> _quickAmounts = ["5", "10", "20", "50", "100"];
 
-  final List<Map<String, dynamic>> _methods = [
-    {
-      "title": "Linked Bank Account",
-      "subtitle": "ABA Bank ....4291",
-      "icon": Icons.account_balance_outlined,
-      "method": "aba",
-    },
-    {
-      "title": "Bakong KHQR",
-      "subtitle": "Scan or Pay with ID",
-      "icon": Icons.qr_code_scanner_rounded,
-      "method": "bakong",
-    },
-    {
-      "title": "Cash",
-      "subtitle": "Cash top-up",
-      "icon": Icons.payments_outlined,
-      "method": "cash",
-    },
-  ];
+  // Color Palette
+  static const Color primaryColor = Color(0xFF1A1A1A); // Modern Dark
+  static const Color accentColor = Color(0xFF0066FF); // Brand Blue
+  static const Color surfaceColor = Color(0xFFF7F9FC);
+  static const Color cardColor = Colors.white;
 
   @override
   void dispose() {
@@ -54,179 +42,184 @@ class _DepositPageState extends ConsumerState<DepositPage> {
     super.dispose();
   }
 
-  Future<void> _confirmDeposit() async {
+  Future<void> _confirmDeposit(String method) async {
+    if (_isProcessing) return;
     HapticFeedback.mediumImpact();
 
     final amount = double.tryParse(_amountController.text.trim()) ?? 0;
 
     if (amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please enter valid amount"),
-        ),
-      );
+      _showSnackBar("Please enter a valid amount", Colors.orange);
       return;
     }
 
-    final selectedMethod = _methods[_selectedMethodIndex];
-    final method = selectedMethod['method'] as String;
+    setState(() {
+      _selectedMethodKey = method;
+      _loadingMethodKey = method;
+    });
 
-    final success = await ref.read(walletTopUpProvider.notifier).topUpWallet(
-      walletId: widget.walletId,
-      userId: widget.userId,
-      amount: amount,
-      method: method,
-      transactionRef: method.toUpperCase(),
-      externalTransactionId:
-      "${method.toUpperCase()}-${DateTime.now().millisecondsSinceEpoch}",
-      description: "Top up wallet by ${selectedMethod['title']}",
-    );
+    try {
+      final paymentRepository = ref.read(paymentRepositoryProvider);
+      String externalTransactionId;
 
-    if (!mounted) return;
+      if (method == 'khqr' || method == 'bakong') {
+        final paymentResponse = await paymentRepository.generatePayment(
+          PaymentRequest(
+            amount: amount,
+            billNumber: 'WALLET-${DateTime.now().millisecondsSinceEpoch}',
+            mobileNumber: '012345678', // Replace with dynamic if needed
+            storeLabel: 'FiXIT',
+            terminalLabel: 'Wallet',
+            purposeOfTransaction: 'Wallet top up',
+            expirationTimestamp: DateTime.now().add(const Duration(minutes: 30)).millisecondsSinceEpoch,
+          ),
+        );
 
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Wallet topped up successfully"),
-          backgroundColor: Colors.green,
-        ),
+        final md5 = paymentResponse.data.md5;
+        final deeplink = paymentResponse.data.deeplink?.shortLink;
+        final imageBase64 = paymentResponse.data.image?.imageBase64;
+
+        if (md5 == null || imageBase64 == null) throw Exception('Payment generation failed');
+
+        if (!mounted) return;
+        setState(() => _loadingMethodKey = null);
+
+        final String? externalRef = await Navigator.of(context).push<String>(
+          MaterialPageRoute(
+            builder: (_) => PaymentQrPage(
+              base64Image: imageBase64,
+              deeplink: method == 'bakong' ? deeplink : null,
+              isBakongOnly: method == 'bakong',
+              onCheckPayment: () => paymentRepository.checkMd5(md5),
+            ),
+          ),
+        );
+
+        if (externalRef == null) throw Exception('Payment cancelled');
+        externalTransactionId = externalRef;
+
+        if (mounted) setState(() => _loadingMethodKey = method);
+      } else {
+        externalTransactionId = "CASH-${DateTime.now().millisecondsSinceEpoch}";
+      }
+
+      final success = await ref.read(walletTopUpProvider.notifier).topUpWallet(
+        walletId: widget.walletId,
+        userId: widget.userId,
+        amount: amount,
+        method: method,
+        transactionRef: 'DEP-${DateTime.now().millisecondsSinceEpoch}',
+        externalTransactionId: externalTransactionId,
+        description: "Top up wallet via ${method.toUpperCase()}",
       );
 
-      Navigator.pop(context);
-    } else {
-      final error = ref.read(walletTopUpProvider).error;
+      if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error?.toString() ?? "Failed to top up wallet"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (success) {
+        _showSnackBar("Wallet topped up successfully", Colors.green);
+        Navigator.pop(context);
+      } else {
+        throw Exception(ref.read(walletTopUpProvider).error ?? "Failed to top up");
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _showSnackBar(e.toString().replaceFirst('Exception: ', ''), Colors.red);
+    } finally {
+      if (mounted) setState(() => _loadingMethodKey = null);
     }
+  }
+
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(fontWeight: FontWeight.w600)),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final topUpState = ref.watch(walletTopUpProvider);
-    final isLoading = topUpState.isLoading;
-
-    const Color primaryBlue = Color(0xFF1976D2);
-    const Color bgGrey = Color(0xFFF8F9FB);
+    final isLoading = ref.watch(walletTopUpProvider).isLoading || _isProcessing;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: surfaceColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        centerTitle: true,
-        title: const Text(
-          "Deposit",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.close, color: primaryColor),
           onPressed: isLoading ? null : () => Navigator.pop(context),
         ),
+        title: const Text(
+          "Top Up Wallet",
+          style: TextStyle(color: primaryColor, fontWeight: FontWeight.w800, fontSize: 18),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 10),
-
-            const Text(
-              "Deposit Funds",
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-              "Add money to your Fixit wallet securely.",
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.black.withOpacity(0.6),
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
+            // Amount Input Card
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                color: cardColor,
+                borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(0.03),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
-                  )
+                  ),
                 ],
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "AMOUNT (USD)",
+                    "Enter Amount",
                     style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black.withOpacity(0.4),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[500],
                       letterSpacing: 0.5,
                     ),
                   ),
-
-                  const SizedBox(height: 20),
-
+                  const SizedBox(height: 16),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text(
-                        "\$",
-                        style: TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                      const Padding(
+                        padding: EdgeInsets.only(top: 8),
+                        child: Text(
+                          "\$",
+                          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: primaryColor),
                         ),
                       ),
-
-                      const SizedBox(width: 10),
-
-                      Expanded(
+                      const SizedBox(width: 8),
+                      IntrinsicWidth(
                         child: TextField(
                           controller: _amountController,
                           enabled: !isLoading,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d{0,2}'),
-                            ),
-                          ],
-                          onChanged: (val) => setState(() {}),
-                          style: const TextStyle(
-                            fontSize: 48,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF2E3A59),
-                          ),
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w800, color: primaryColor),
                           decoration: const InputDecoration(
                             border: InputBorder.none,
                             hintText: "0.00",
-                            hintStyle: TextStyle(
-                              color: Color(0xFFB0B4C1),
-                            ),
+                            hintStyle: TextStyle(color: Color(0xFFE0E0E0)),
+                            contentPadding: EdgeInsets.zero,
                           ),
+                          onChanged: (_) => setState(() {}),
                         ),
                       ),
                     ],
@@ -235,200 +228,182 @@ class _DepositPageState extends ConsumerState<DepositPage> {
               ),
             ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 32),
 
-            Text(
+            // Quick Select
+            const Text(
               "QUICK SELECT",
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.black.withOpacity(0.4),
-                letterSpacing: 1.1,
-              ),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.grey, letterSpacing: 1.2),
             ),
-
-            const SizedBox(height: 15),
-
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: _quickAmounts.map((amt) {
-                  final isSelected =
-                      _amountController.text == amt ||
-                          _amountController.text == "$amt.00";
-
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 48,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _quickAmounts.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemBuilder: (context, index) {
+                  final amt = _quickAmounts[index];
+                  final isSelected = _amountController.text == amt || _amountController.text == "$amt.00";
                   return GestureDetector(
                     onTap: isLoading
                         ? null
                         : () {
-                      setState(() {
-                        _amountController.text = amt;
-                      });
-                      HapticFeedback.selectionClick();
+                      setState(() => _amountController.text = amt);
+                      HapticFeedback.lightImpact();
                     },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.only(right: 12),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
                       decoration: BoxDecoration(
-                        color: isSelected ? primaryBlue : bgGrey,
-                        borderRadius: BorderRadius.circular(12),
+                        color: isSelected ? accentColor : cardColor,
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color:
-                          isSelected ? primaryBlue : Colors.transparent,
+                          color: isSelected ? accentColor : Colors.transparent,
                         ),
+                        boxShadow: isSelected
+                            ? [BoxShadow(color: accentColor.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))]
+                            : null,
                       ),
-                      child: Text(
-                        "\$$amt",
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
+                      child: Center(
+                        child: Text(
+                          "\$$amt",
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : primaryColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                     ),
                   );
-                }).toList(),
+                },
               ),
-            ),
-
-            const SizedBox(height: 35),
-
-            const Text(
-              "Payment Method",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _methods.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final isSelected = _selectedMethodIndex == index;
-                final method = _methods[index];
-
-                return GestureDetector(
-                  onTap: isLoading
-                      ? null
-                      : () {
-                    setState(() => _selectedMethodIndex = index);
-                    HapticFeedback.lightImpact();
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 20,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.white : bgGrey,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color:
-                        isSelected ? primaryBlue : Colors.transparent,
-                        width: 2,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isSelected ? bgGrey : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            method['icon'],
-                            color: Colors.black,
-                          ),
-                        ),
-
-                        const SizedBox(width: 16),
-
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                method['title'],
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                method['subtitle'],
-                                style: TextStyle(
-                                  color: Colors.black.withOpacity(0.5),
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        if (isSelected)
-                          const Icon(
-                            Icons.check_circle,
-                            color: primaryBlue,
-                            size: 24,
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-              },
             ),
 
             const SizedBox(height: 40),
 
-            SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: ElevatedButton(
-                onPressed: isLoading ? null : _confirmDeposit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryBlue,
-                  disabledBackgroundColor: Colors.grey,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
+            // Payment Methods Section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Payment Method',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: primaryColor),
                 ),
-                child: isLoading
-                    ? const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: Colors.white,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(8)),
+                  child: Row(
+                    children: [
+                      Icon(Icons.shield_outlined, size: 14, color: Colors.green[700]),
+                      const SizedBox(width: 4),
+                      Text("Secure", style: TextStyle(fontSize: 12, color: Colors.green[700], fontWeight: FontWeight.bold)),
+                    ],
                   ),
                 )
-                    : const Text(
-                  "Confirm Deposit",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            _buildMethodCard(
+              title: 'KHQR Payment',
+              subtitle: 'Scan with any Cambodian Bank app',
+              image: 'assets/images/khqr-5.png',
+              methodKey: 'khqr',
+              isLoading: isLoading,
+            ),
+            const SizedBox(height: 12),
+            _buildMethodCard(
+              title: 'Bakong App',
+              subtitle: 'Direct transfer from Bakong',
+              image: 'assets/images/bakong.png',
+              methodKey: 'bakong',
+              isLoading: isLoading,
             ),
 
             const SizedBox(height: 40),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMethodCard({
+    required String title,
+    required String subtitle,
+    required String image,
+    required String methodKey,
+    required bool isLoading,
+  }) {
+    final isThisLoading = _loadingMethodKey == methodKey;
+    final isSelected = _selectedMethodKey == methodKey;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isSelected ? accentColor.withOpacity(0.5) : Colors.transparent,
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: isLoading ? null : () => _confirmDeposit(methodKey),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: surfaceColor,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.asset(image, fit: BoxFit.cover),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: primaryColor),
+                      ),
+                      Text(
+                        subtitle,
+                        style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isThisLoading)
+                  const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: accentColor))
+                else
+                  Icon(
+                    isSelected ? Icons.check_circle_rounded : Icons.arrow_forward_ios_rounded,
+                    color: isSelected ? accentColor : Colors.grey[300],
+                    size: isSelected ? 26 : 18,
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );
