@@ -91,8 +91,12 @@ class OrderListView extends ConsumerWidget {
         return "Pending Payments";
       case 1:
         return "Recent History";
-      default:
+      case 2:
         return "Upcoming Services";
+      case 3:
+        return "Refunded Orders";
+      default:
+        return "Orders";
     }
   }
 
@@ -108,7 +112,8 @@ class OrderListView extends ConsumerWidget {
         if (booking.payments.isEmpty) return true;
 
         return booking.payments.any((payment) {
-          return (payment.status?.toLowerCase() ?? '') != 'paid';
+          final status = payment.status?.toLowerCase() ?? '';
+          return status != 'paid' && status != 'refunded';
         });
       }).toList();
     } else if (selectedTab == 1) {
@@ -117,9 +122,23 @@ class OrderListView extends ConsumerWidget {
           return (payment.status?.toLowerCase() ?? '') == 'paid';
         });
       }).toList();
-    } else {
+    } else if (selectedTab == 2) {
       filtered = bookings.where((booking) {
-        return (booking.bookingStatus?.toLowerCase() ?? '') == 'pending';
+        final bookingStatus = booking.bookingStatus?.toLowerCase() ?? '';
+        final customerStatus = booking.customerStatus?.toLowerCase() ?? '';
+
+        return bookingStatus == 'pending' &&
+            customerStatus != 'refunded';
+      }).toList();
+    } else if (selectedTab == 3) {
+      filtered = bookings.where((booking) {
+        final customerStatus = booking.customerStatus?.toLowerCase() ?? '';
+
+        final hasRefundedPayment = booking.payments.any((payment) {
+          return (payment.status?.toLowerCase() ?? '') == 'refunded';
+        });
+
+        return customerStatus == 'refunded' || hasRefundedPayment;
       }).toList();
     }
 
@@ -198,6 +217,22 @@ class OrderListView extends ConsumerWidget {
   }
 
   String _getStatusLabel(int tab, Payment? payment, ServiceBooking booking) {
+    final paymentStatus = payment?.status?.toLowerCase();
+    final bookingStatus = booking.bookingStatus?.toLowerCase();
+    final customerStatus = booking.customerStatus?.toLowerCase();
+
+    // Refund status
+    if (paymentStatus == 'refunded' ||
+        customerStatus == 'refunded' ||
+        customerStatus == 'refund') {
+      return "REFUNDED";
+    }
+
+    // Cancelled status
+    if (bookingStatus == 'cancelled' || bookingStatus == 'canceled') {
+      return "CANCELLED";
+    }
+
     if (tab == 0) {
       return payment?.status?.toUpperCase() ?? "UNPAID";
     }
@@ -206,20 +241,20 @@ class OrderListView extends ConsumerWidget {
       return payment?.status?.toUpperCase() ?? "PAID";
     }
 
-    return booking.bookingStatus ?? "Scheduled";
+    return booking.bookingStatus?.toUpperCase() ?? "SCHEDULED";
   }
 
   Color _getStatusColor(int tab, Payment? payment, ServiceBooking booking) {
     final paymentStatus = payment?.status?.toLowerCase();
-
-    if (tab == 0 || tab == 1) {
-      if (paymentStatus == 'paid') return Colors.green;
-      if (paymentStatus == 'pending') return Colors.orange;
-      if (paymentStatus == 'failed') return Colors.red;
-      return Colors.orange;
-    }
-
     final bookingStatus = booking.bookingStatus?.toLowerCase();
+    final customerStatus = booking.customerStatus?.toLowerCase();
+
+    // Refund color
+    if (paymentStatus == 'refunded' ||
+        customerStatus == 'refunded' ||
+        customerStatus == 'refund') {
+      return Colors.purple;
+    }
 
     if (bookingStatus == 'cancelled' || bookingStatus == 'canceled') {
       return Colors.red;
@@ -227,6 +262,14 @@ class OrderListView extends ConsumerWidget {
 
     if (bookingStatus == 'completed') {
       return Colors.green;
+    }
+
+    if (tab == 0 || tab == 1) {
+      if (paymentStatus == 'paid') return Colors.green;
+      if (paymentStatus == 'pending') return Colors.orange;
+      if (paymentStatus == 'failed') return Colors.red;
+      if (paymentStatus == 'refunded') return Colors.purple;
+      return Colors.orange;
     }
 
     return Colors.blue;
@@ -238,17 +281,27 @@ class OrderListView extends ConsumerWidget {
       ServiceBooking booking,
       ) {
     final paymentStatus = payment?.status?.toLowerCase();
+    final bookingStatus = booking.bookingStatus?.toLowerCase();
+    final customerStatus = booking.customerStatus?.toLowerCase();
+
+    // Close button when refunded
+    if (paymentStatus == 'refunded' ||
+        customerStatus == 'refunded' ||
+        customerStatus == 'refund') {
+      return null;
+    }
+
+    // Close button when cancelled
+    if (bookingStatus == 'cancelled' || bookingStatus == 'canceled') {
+      return null;
+    }
 
     if (tab == 0) {
       return paymentStatus == 'paid' ? null : "Pay Now";
     }
 
     if (tab == 2) {
-      final bookingStatus = booking.bookingStatus?.toLowerCase();
-
-      if (bookingStatus == 'cancelled' ||
-          bookingStatus == 'canceled' ||
-          bookingStatus == 'completed') {
+      if (bookingStatus == 'completed') {
         return null;
       }
 

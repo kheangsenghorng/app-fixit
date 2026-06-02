@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../features/auth/presentation/ui/otp/otp_screen.dart';
 import '../features/onboarding_screen/onboarding_screen.dart';
 import '../features/splash_screen/splash_screen_widget.dart';
+import '../features/user/feedback/feedback_screen.dart';
 import '../features/user/main_screen.dart';
 import '../features/user/orders/details/order_details_screen.dart';
 import '../features/user/payment/payment_screen.dart';
@@ -58,6 +59,7 @@ class RouteGenerator {
             bookingId: bookingId,
           ),
         );
+      case AppRoutes.feedback:return buildRoute(const FeedbackScreen());
       case AppRoutes.serviceCard:
         final args = settings.arguments as Map<String, dynamic>;
 

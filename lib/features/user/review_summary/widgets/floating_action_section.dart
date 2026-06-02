@@ -108,6 +108,7 @@ class FloatingActionSection extends StatelessWidget {
                         onTap: () => handleTap('bakong'),
                         iconBgColor: const Color(0xFFE51D28),
                       ),
+                      const Divider(height: 1, indent: 64),
                       _PaymentMethodTile(
                         icon: Icons.account_balance_wallet_outlined,
                         title: 'Wallet Payment',
